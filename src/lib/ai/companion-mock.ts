@@ -9,6 +9,9 @@ import {
   SUPPORT_RESPONSE_MESSAGE,
   URGENT_RESPONSE_MESSAGE,
 } from "@/lib/ai/safety";
+import { createMemoryProposalCandidate } from "@/lib/light/memory-policy";
+
+import type { LightPlan, SupportMode } from "@/lib/light/types";
 
 /**
  * Development-only companion. Returns deterministic, contract-valid responses
@@ -17,10 +20,126 @@ import {
  * before it is returned, exactly as a live provider's output will be.
  */
 export class MockCompanionProvider implements CompanionProvider {
-  async respond(input: CompanionRequest): Promise<CompanionResponse> {
-    const response = buildMockResponse(input);
+  async respond(input: CompanionRequest, plan?: LightPlan): Promise<CompanionResponse> {
+    // With a LightPlan, the plan (not keywords) decides the shape of the
+    // response — exactly how a live provider will be constrained. Without a
+    // plan we fall back to the legacy keyword heuristics for compatibility.
+    const response = plan ? buildPlannedResponse(input, plan) : buildMockResponse(input);
     return companionResponseSchema.parse(response);
   }
+}
+
+// ---------------------------------------------------------------------------
+// LightPlan-driven mock rendering (deterministic)
+// ---------------------------------------------------------------------------
+
+const PLANNED_MESSAGES: Record<SupportMode, { brief: string; moderate: string; question: string }> =
+  {
+    witness: {
+      brief: "I'm taking that in. It sounds like it landed hard.",
+      moderate:
+        "I'm taking that in — all of it. What you described sounds like it landed hard, and you told it plainly.",
+      question: "What part of it is sitting heaviest right now?",
+    },
+    explore: {
+      brief: "I'm listening. Say more, wherever it starts.",
+      moderate:
+        "I'm listening. There's no wrong place to start — follow whichever thread feels most alive.",
+      question: "What feels most present for you right now?",
+    },
+    comfort: {
+      brief: "That's a lot to hold. You don't have to hold it alone right now.",
+      moderate:
+        "That's a lot to hold, and you've been holding it a while. Nothing here needs solving tonight — you don't have to hold it alone right now.",
+      question: "Would it help to say a little more, or just have company?",
+    },
+    clarify: {
+      brief: "Let's lay it out before deciding anything.",
+      moderate:
+        "Before any advice, let's lay it out: what's fact, what's fear, what choices actually exist, and what you want to be true afterward.",
+      question: "Which option do you keep circling back to?",
+    },
+    act: {
+      brief: "One small true step is enough. Here's one that might fit.",
+      moderate:
+        "When everything is loud, one small true step is enough. Here's one that might fit what you have in you today.",
+      question: "Does that feel like the right size?",
+    },
+    celebrate: {
+      brief: "That's real, and it's yours. Take a second to feel it.",
+      moderate:
+        "That's real, and it's yours. Before the day moves on, take a second to actually feel it — this one counts.",
+      question: "What part of it are you most glad about?",
+    },
+    connect: {
+      brief: "We can find words that still sound like you.",
+      moderate:
+        "We can find words that are honest and still sound like you. Tell me who it's for and what you most want them to understand.",
+      question: "What do you most want them to know when they finish reading?",
+    },
+    reflect: {
+      brief: "There's something underneath this worth looking at gently.",
+      moderate:
+        "There's something underneath this that seems worth looking at gently — not to fix it, just to see it more clearly.",
+      question: "When did you first notice it working on you like this?",
+    },
+    presence: {
+      brief: "I'm here. No fixing, no plan.",
+      moderate: "I'm here. No fixing, no plan, no clock. Take whatever time you need.",
+      question: "",
+    },
+  };
+
+function buildPlannedResponse(input: CompanionRequest, plan: LightPlan): CompanionResponse {
+  const { understanding, reflection, memory } = plan;
+
+  if (understanding.safetyLevel === "urgent") {
+    return {
+      supportMode: "presence",
+      message: URGENT_RESPONSE_MESSAGE,
+      followUp: null,
+      closingLine: null,
+      suggestedStep: null,
+      proposedMemory: null,
+      safety: { level: "urgent", message: URGENT_RESPONSE_MESSAGE },
+    };
+  }
+
+  const mode = understanding.supportMode;
+  const template = PLANNED_MESSAGES[mode];
+  const brief = input.preferences.responseLength === "brief";
+  let message = brief ? template.brief : template.moderate;
+  if (input.preferences.responseLength === "expansive" && !brief) {
+    message = `${template.moderate} However this goes, there's no hurry from here.`;
+  }
+
+  const suggestedStep = reflection.shouldOfferAction
+    ? {
+        title: "Clear one square foot",
+        description:
+          input.preferences.planningStyle === "small-plan"
+            ? "Pick the smallest piece of what's in front of you, finish only that, then decide if a second piece fits."
+            : "Pick the smallest piece of what's in front of you and finish only that.",
+        estimatedMinutes: 10,
+      }
+    : null;
+
+  const proposedMemory = memory.mayProposeMemory
+    ? createMemoryProposalCandidate(input.message, input.approvedMemories)
+    : null;
+
+  return {
+    supportMode: mode,
+    message,
+    followUp: reflection.shouldAskQuestion && template.question ? template.question : null,
+    closingLine: plan.closingPolicy.line,
+    suggestedStep,
+    proposedMemory,
+    safety:
+      understanding.safetyLevel === "support"
+        ? { level: "support", message: SUPPORT_RESPONSE_MESSAGE }
+        : { level: "none", message: null },
+  };
 }
 
 function buildMockResponse(input: CompanionRequest): CompanionResponse {

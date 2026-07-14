@@ -26,6 +26,62 @@ Route groups: `(marketing)` public pages, `(auth)` sign-in/up/forgot-password + 
 `(app)` protected screens (Arrival, Conversation, Stay Here, Guidance, Stillness, Horizon, Echoes,
 Settings). API: `POST /api/companion`, `GET /api/health`.
 
+## The Light Engine (Phase 2)
+
+The Light Engine (`src/lib/light/`) is a **provider-independent behavioral layer** that sits
+between the application and every AI provider. Saelis defines how the provider behaves; the
+provider never defines Saelis. It is synchronous, deterministic, performs no I/O, and imports no
+provider SDK.
+
+> **The Light Engine does not create genuine emotional understanding. In its current form, it
+> combines explicit user intent, transparent heuristics, companion preferences, approved memory,
+> safety rules, and provider instructions.**
+
+```mermaid
+flowchart LR
+    MSG["message"] --> CTX["normalize"] --> SAFE["safety pre-check"] --> UND["understanding"]
+    UND --> REF["reflection"] --> MEM["memory policy"] --> PROMPT["prompt composer"] --> PLAN["LightPlan"]
+    PLAN -->|urgent| CRISIS["crisis response (no provider call)"]
+    PLAN --> PROV["provider (mock)"] --> VAL["Zod validation"] --> CLOSE["closing policy"] --> DB["persist (privacy-gated)"]
+```
+
+Key properties, all covered by tests:
+
+- **Deterministic routing.** Explicit intent wins ("I just need to vent" never becomes a plan;
+  "give me steps" permits one). Distress never defaults to action. Low confidence favors gentle
+  clarification. These are transparent keyword heuristics — a documented limitation — to be
+  supplemented later by validated provider-side classification behind the same contract.
+- **Urgent safety override.** Urgent cues bypass the provider entirely; the crisis response (911 /
+  call-or-text 988 in the US / a trusted person) replaces ordinary companionship. The keyword
+  pre-check remains incomplete by design and is never represented as comprehensive detection.
+- **Memory consent.** The engine only ever _decides_ whether a proposal is allowed (never when
+  memory is disabled, in any safety context, at low confidence, for duplicates, or in prohibited
+  categories). Persistence still requires the user's explicit approval; nothing is auto-saved.
+- **Constitution as code.** `src/lib/light/constitution.ts` compiles a compact, deterministic
+  constitutional instruction per request — the prose constitution is never sent to providers.
+- **Earned closings.** Closing lines are selected deterministically and only when a moment truly
+  concludes; crisis responses are never closed poetically.
+
+### Foundational documents
+
+| Document                           | Path                                               |
+| ---------------------------------- | -------------------------------------------------- |
+| The Book of Saelis                 | `docs/00-foundations/the-book-of-saelis.md`        |
+| Company Principles (Eight Pillars) | `docs/00-foundations/company-principles.md`        |
+| North Star                         | `docs/00-foundations/north-star.md`                |
+| Constitution of the Light          | `docs/01-the-light/constitution.md`                |
+| Companion Voice Guide              | `docs/01-the-light/companion-voice-guide.md`       |
+| Emotional Architecture             | `docs/01-the-light/emotional-architecture.md`      |
+| Memory Charter                     | `docs/01-the-light/memory-charter.md`              |
+| Experience Map                     | `docs/02-product/experience-map.md`                |
+| Light Engine Architecture          | `docs/03-engineering/light-engine-architecture.md` |
+| Safety and Boundaries              | `docs/03-engineering/safety-and-boundaries.md`     |
+
+**Phase 2 status:** philosophy formalized, Light Engine built and integrated with the mock
+companion API. No live AI model is connected; the OpenAI provider remains an intentional
+placeholder. Run the engine's tests with `npm test` (see `src/lib/light/*.test.ts` for the
+message matrix).
+
 ## Local setup
 
 ```sh

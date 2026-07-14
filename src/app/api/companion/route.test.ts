@@ -20,6 +20,10 @@ vi.mock("@/lib/db/queries/memories", () => ({
   listApprovedActiveMemories: vi.fn(async () => []),
 }));
 
+vi.mock("@/lib/db/queries/arrivals", () => ({
+  listRecentArrivals: vi.fn(async () => []),
+}));
+
 vi.mock("@/lib/db/queries/conversations", () => ({
   createConversation: vi.fn(async () => ({ id: "11111111-1111-4111-8111-111111111111" })),
   getConversation: vi.fn(async () => null),
@@ -126,6 +130,43 @@ describe("POST /api/companion", () => {
     expect(response.status).toBe(200);
     expect(createConversation).not.toHaveBeenCalled();
     expect(saveTurn).not.toHaveBeenCalled();
+  });
+
+  it("interrupts with the urgent safety response and never calls the ordinary flow shape", async () => {
+    const response = await POST(companionRequest({ message: "I'm thinking about harming myself" }));
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as {
+      response: {
+        supportMode: string;
+        message: string;
+        suggestedStep: unknown;
+        proposedMemory: unknown;
+        safety: { level: string };
+      };
+      lightState: string;
+    };
+    expect(payload.response.safety.level).toBe("urgent");
+    expect(payload.response.supportMode).toBe("presence");
+    expect(payload.response.message).toContain("988");
+    expect(payload.response.suggestedStep).toBeNull();
+    expect(payload.response.proposedMemory).toBeNull();
+    expect(payload.lightState).toBe("still");
+  });
+
+  it("returns the plan's suggested light state", async () => {
+    const response = await POST(companionRequest({ message: "I just need to vent." }));
+    const payload = (await response.json()) as {
+      lightState: string;
+      response: { supportMode: string };
+    };
+    expect(payload.response.supportMode).toBe("witness");
+    expect(payload.lightState).toBe("listening");
+  });
+
+  it("applies the no-closing policy on short exchanges", async () => {
+    const response = await POST(companionRequest({ message: "hello there" }));
+    const payload = (await response.json()) as { response: { closingLine: string | null } };
+    expect(payload.response.closingLine).toBeNull();
   });
 
   it("rate limits rapid-fire requests with 429", async () => {

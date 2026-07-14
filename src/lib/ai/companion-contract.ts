@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { SUPPORT_MODES } from "@/lib/constants";
+import type { LightPlan } from "@/lib/light/types";
 import type { CompanionPreferences, SupportMode } from "@/types/companion";
 
 /**
@@ -68,6 +69,12 @@ export interface CompanionRequest {
   recentTurns: CompanionTurnContext[];
 }
 
+/**
+ * Every provider receives the request plus the Light Engine's plan. The plan
+ * carries Saelis's identity (constitution, strategy, memory policy, closing
+ * policy); the provider only renders within it. `plan` is optional so legacy
+ * callers and tests remain valid — providers must behave sensibly without it.
+ */
 export interface CompanionProvider {
-  respond(input: CompanionRequest): Promise<CompanionResponse>;
+  respond(input: CompanionRequest, plan?: LightPlan): Promise<CompanionResponse>;
 }

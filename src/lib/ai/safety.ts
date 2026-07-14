@@ -50,6 +50,8 @@ const URGENT_PATTERNS: RegExp[] = [
   /\bwant(ed)? to die\b/i,
   /\bdon'?t want to (be alive|live|wake up)\b/i,
   /\bhurt(ing)? myself\b/i,
+  /\bharm(ing)? myself\b/i,
+  /\bthinking about (hurting|harming|killing) myself\b/i,
   /\bself[- ]?harm\b/i,
   /\bno reason to (live|go on)\b/i,
   /\bbetter off without me\b/i,

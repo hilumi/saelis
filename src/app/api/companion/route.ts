@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { companionResponseSchema } from "@/lib/ai/companion-contract";
+import { companionResponseSchema, type CompanionResponse } from "@/lib/ai/companion-contract";
 import { getCompanionProvider } from "@/lib/ai/provider";
+import { URGENT_RESPONSE_MESSAGE } from "@/lib/ai/safety";
 import { toCompanionPreferences } from "@/lib/companion-defaults";
 import { COMPANION_MAX_BODY_BYTES } from "@/lib/constants";
+import { listRecentArrivals } from "@/lib/db/queries/arrivals";
 import {
   createConversation,
   getConversation,
@@ -12,10 +14,13 @@ import {
 } from "@/lib/db/queries/conversations";
 import { listApprovedActiveMemories } from "@/lib/db/queries/memories";
 import { getCompanionProfile, getPrivacySettings } from "@/lib/db/queries/profile";
+import { createLightPlan, LightContextError } from "@/lib/light";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { companionRequestSchema } from "@/lib/validation/companion";
+
+import type { LightContext } from "@/lib/light";
 
 export const dynamic = "force-dynamic";
 
@@ -24,15 +29,20 @@ const CALM_ERROR = "Saelis had trouble responding just now. Nothing you wrote wa
 /**
  * POST /api/companion — the single companion endpoint.
  *
- * Order of operations:
+ * The Light Engine sits between this route and every provider:
  *  1. authenticate (server session — client-supplied IDs are never trusted)
- *  2. rate-limit (in-memory; NOT sufficient for multi-instance production,
- *     see lib/rate-limit.ts)
+ *  2. rate-limit (in-memory; NOT sufficient for multi-instance production)
  *  3. enforce request-size limit, parse and validate with Zod
- *  4. load companion profile, privacy settings, approved memories, recent turns
- *  5. call the configured provider (mock in Phase 1 — no external AI call)
- *  6. validate the provider response against the contract
- *  7. persist turns only if privacy settings allow; NEVER persist a proposed memory
+ *  4. load companion profile, privacy settings, approved memories, recent
+ *     turns, and the latest arrival
+ *  5. build a LightContext and run createLightPlan (safety pre-check,
+ *     understanding, reflection, memory policy, prompt composition, closing)
+ *  6. URGENT SAFETY: return the crisis response directly — the ordinary
+ *     provider is never called
+ *  7. otherwise call the configured provider with the request AND the plan
+ *  8. validate the provider response against the contract
+ *  9. apply the closing-line policy
+ * 10. persist turns only if privacy allows; NEVER persist a proposed memory
  */
 export async function POST(request: Request) {
   try {
@@ -104,36 +114,95 @@ export async function POST(request: Request) {
     const allowMemory = privacy?.allow_companion_memory ?? true;
     const saveHistory = privacy?.save_conversation_history ?? true;
 
-    const [memories, recentTurns] = await Promise.all([
+    const [memories, recentTurns, recentArrivals] = await Promise.all([
       allowMemory ? listApprovedActiveMemories(supabase, user.id) : Promise.resolve([]),
       conversationId ? getRecentTurns(supabase, user.id, conversationId) : Promise.resolve([]),
+      listRecentArrivals(supabase, user.id, 1),
     ]);
+    const latestArrival = recentArrivals[0];
 
-    const provider = getCompanionProvider();
-    const providerResponse = await provider.respond({
+    // Build the Light Engine context. Only user-approved, active memories are
+    // ever supplied, and the engine drops them again if memory is disabled.
+    const lightContext: LightContext = {
       userId: user.id,
-      conversationId,
       message: input.message,
-      includeFaithReflection: input.includeFaithReflection,
-      supportHint: input.supportHint,
-      preferences: toCompanionPreferences(companionProfile),
-      // Only user-approved, active memories are ever supplied to the provider.
+      recentTurns: recentTurns
+        .filter((turn) => turn.role !== "system")
+        .map((turn) => ({ role: turn.role as "user" | "assistant", content: turn.content })),
+      companionProfile: toCompanionPreferences(companionProfile),
       approvedMemories: memories.map((memory) => ({
         category: memory.category,
         content: memory.content,
       })),
-      recentTurns: recentTurns
-        .filter((turn) => turn.role !== "system")
-        .map((turn) => ({ role: turn.role as "user" | "assistant", content: turn.content })),
-    });
+      latestArrival: latestArrival
+        ? {
+            mood: latestArrival.mood,
+            energy: latestArrival.energy,
+            supportNeed: latestArrival.support_need,
+            includeFaithReflection: latestArrival.include_faith_reflection,
+          }
+        : undefined,
+      privacy: {
+        saveConversationHistory: saveHistory,
+        allowCompanionMemory: allowMemory,
+      },
+    };
 
-    const validated = companionResponseSchema.safeParse(providerResponse);
-    if (!validated.success) {
-      // Log the failure shape only — never response content.
-      console.error("companion provider returned an invalid response");
-      return NextResponse.json({ error: CALM_ERROR }, { status: 502 });
+    let plan;
+    try {
+      plan = createLightPlan(lightContext);
+    } catch (error) {
+      if (error instanceof LightContextError) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      throw error;
     }
-    const response = validated.data;
+
+    let response: CompanionResponse;
+
+    if (plan.understanding.safetyLevel === "urgent") {
+      // Urgent safety interrupts ordinary companionship entirely: the
+      // provider is not called, no memory is proposed, no closing line.
+      response = {
+        supportMode: "presence",
+        message: URGENT_RESPONSE_MESSAGE,
+        followUp: null,
+        closingLine: null,
+        suggestedStep: null,
+        proposedMemory: null,
+        safety: { level: "urgent", message: URGENT_RESPONSE_MESSAGE },
+      };
+    } else {
+      const provider = getCompanionProvider();
+      const providerResponse = await provider.respond(
+        {
+          userId: user.id,
+          conversationId,
+          message: input.message,
+          includeFaithReflection: input.includeFaithReflection,
+          supportHint: input.supportHint,
+          preferences: lightContext.companionProfile,
+          approvedMemories: plan.memory.mayUseApprovedMemories ? lightContext.approvedMemories : [],
+          recentTurns: lightContext.recentTurns,
+        },
+        plan,
+      );
+
+      const validated = companionResponseSchema.safeParse(providerResponse);
+      if (!validated.success) {
+        // Log the failure shape only — never response content.
+        console.error("companion provider returned an invalid response");
+        return NextResponse.json({ error: CALM_ERROR }, { status: 502 });
+      }
+      response = validated.data;
+
+      // Closing-line policy: closings are earned, not appended to everything.
+      if (plan.closingPolicy.context === "no-closing") {
+        response = { ...response, closingLine: null };
+      } else if (!response.closingLine && plan.closingPolicy.line) {
+        response = { ...response, closingLine: plan.closingPolicy.line };
+      }
+    }
 
     if (saveHistory) {
       if (!conversationId) {
@@ -158,7 +227,11 @@ export async function POST(request: Request) {
 
     // IMPORTANT: response.proposedMemory is returned to the client for the
     // user to accept or decline. It is NEVER saved here.
-    return NextResponse.json({ conversationId, response });
+    return NextResponse.json({
+      conversationId,
+      response,
+      lightState: plan.reflection.suggestedLightState,
+    });
   } catch (error) {
     // Log error type only — routine logs must not contain message content.
     console.error("companion route error:", error instanceof Error ? error.name : "unknown");

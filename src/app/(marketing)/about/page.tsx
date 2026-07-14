@@ -31,6 +31,23 @@ export default function AboutPage() {
           when things are heavier than a companion should hold, it points you to real human support.
         </p>
       </div>
+      {process.env.NODE_ENV === "development" ? (
+        <aside className="glass-surface p-6 text-sm text-ink-soft">
+          <h2 className="mb-1 font-semibold text-ink">Read the philosophy</h2>
+          <p>
+            Development only: Saelis&apos;s foundational documents live in the repository under{" "}
+            <code className="rounded bg-cloud-lilac px-1 py-0.5">docs/</code> — start with{" "}
+            <code className="rounded bg-cloud-lilac px-1 py-0.5">
+              docs/00-foundations/the-book-of-saelis.md
+            </code>{" "}
+            and{" "}
+            <code className="rounded bg-cloud-lilac px-1 py-0.5">
+              docs/01-the-light/constitution.md
+            </code>
+            . This note does not appear in production builds.
+          </p>
+        </aside>
+      ) : null}
     </article>
   );
 }
