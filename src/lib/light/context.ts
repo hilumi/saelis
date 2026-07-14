@@ -15,6 +15,7 @@ import type { LightContext, LightTurn } from "@/lib/light/types";
  */
 
 export const MAX_RECENT_TURNS = 12;
+export const MAX_APPROVED_MEMORIES = 10;
 
 export class LightContextError extends Error {
   constructor(message: string) {
@@ -51,6 +52,7 @@ export function normalizeLightContext(context: LightContext): LightContext {
         .map((memory) => memorySchema.safeParse(memory))
         .filter((result) => result.success)
         .map((result) => result.data as { category: string; content: string })
+        .slice(0, MAX_APPROVED_MEMORIES)
     : [];
 
   return {

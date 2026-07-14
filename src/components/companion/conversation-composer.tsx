@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { COMPANION_MAX_MESSAGE_LENGTH } from "@/lib/constants";
 
 export interface ConversationComposerProps {
-  onSend: (message: string) => Promise<void> | void;
+  /**
+   * Return false to indicate failure — the draft is preserved in the composer
+   * so nothing the user wrote is lost. Any other result clears the field.
+   */
+  onSend: (message: string) => Promise<boolean | void> | boolean | void;
   disabled?: boolean;
 }
 
@@ -21,8 +25,10 @@ export function ConversationComposer({ onSend, disabled = false }: ConversationC
     const text = message.trim();
     setSending(true);
     try {
-      await onSend(text);
-      setMessage("");
+      const result = await onSend(text);
+      if (result !== false) {
+        setMessage("");
+      }
     } finally {
       setSending(false);
     }

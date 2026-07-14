@@ -32,6 +32,25 @@ reproduction steps. You'll get an acknowledgment within a few days.
   A strict CSP is future hardening work.
 - **Redirects**: auth callback validates `next` as a same-origin relative path.
 
+## Live AI provider (Phase 3)
+
+- `OPENAI_API_KEY` is server-only: read exclusively inside a `server-only` module, lazily, never
+  logged, never bundled for the browser, never exposed via `NEXT_PUBLIC_*`. No client component
+  calls the model.
+- The provider never queries the database; the application layer owns all persistence, still
+  gated by privacy settings, and memory proposals are never auto-saved.
+- Model output is untrusted: strict structured outputs are re-validated with Zod, then
+  deterministically enforced against the Light Engine plan (no unsolicited actions, no forbidden
+  memory proposals, no uninvited faith content, urgent-safety replacement).
+- Prompt injection: user content is confined to input turns and explicitly declared untrusted;
+  instructions forbid revealing developer prompts, private reasoning, or secrets; behavioral
+  fixtures cover injection attempts.
+- Urgent safety bypasses generation entirely — crisis messages are never sent to the provider.
+- Requests set `store:false` by default, enable no tools, and are bounded by timeouts, output
+  tokens, context budgets, per-user rate limits, and a one-active-generation guard.
+- Provider errors map to typed classes with calm public copy; raw SDK errors, status bodies, and
+  stack traces never reach the client.
+
 ## Known gaps (tracked for future phases)
 
 - Content-Security-Policy is not yet strict.

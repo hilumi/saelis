@@ -78,9 +78,41 @@ Key properties, all covered by tests:
 | Safety and Boundaries              | `docs/03-engineering/safety-and-boundaries.md`     |
 
 **Phase 2 status:** philosophy formalized, Light Engine built and integrated with the mock
-companion API. No live AI model is connected; the OpenAI provider remains an intentional
-placeholder. Run the engine's tests with `npm test` (see `src/lib/light/*.test.ts` for the
+companion API. Run the engine's tests with `npm test` (see `src/lib/light/*.test.ts` for the
 message matrix).
+
+## The Awakening (Phase 3) — live companion integration
+
+A production OpenAI provider now runs **beneath** the Light Engine, using the Responses API with
+strict structured outputs. Saelis is an AI system governed by The Light Engine — the model is a
+language engine, not Saelis's identity, and no claim of genuine emotional understanding is made.
+
+- **Provider architecture.** `getCompanionProvider()` returns the deterministic mock
+  (`COMPANION_PROVIDER=mock`, the default) or `OpenAICompanionProvider`
+  (`COMPANION_PROVIDER=openai`); unknown values raise a typed configuration error. The key lives
+  only in the `server-only` client module (`src/lib/ai/openai-client.ts`), initialized lazily —
+  builds succeed with blank variables and never attempt a connection.
+- **Structured output.** An explicit JSON schema (`src/lib/ai/openai-schema.ts`) mirrors the Zod
+  contract, with parity proven by tests. Model output is parsed, Zod-validated, then
+  deterministically **plan-enforced** (`src/lib/ai/plan-enforcement.ts`): unsolicited steps,
+  forbidden memory proposals, uninvited faith content, and unearned closing lines are stripped;
+  urgent safety output is replaced entirely.
+- **Streaming.** `POST /api/companion/stream` (SSE) streams only the decoded `message` text while
+  the full JSON is assembled and validated server-side — see
+  `docs/03-engineering/streaming-protocol.md`. The UI streams progressively, supports "Stop for
+  now" (AbortController), preserves drafts on failure, and prevents duplicate submissions with a
+  client `requestId`.
+- **Safety.** The deterministic urgent pre-check runs before generation; urgent messages never
+  reach the model. The keyword check remains incomplete and is never presented as comprehensive
+  detection.
+- **Cost & privacy.** Context budgeting, output-token caps, one active generation per user,
+  `store:false`, no tools; persistence stays privacy-gated and memory stays consent-only. See
+  `docs/03-engineering/cost-controls.md` and `docs/03-engineering/provider-data-handling.md`.
+- **Tests never call the real API** — the OpenAI client is mocked at the module boundary
+  (`src/lib/ai/companion-openai.test.ts`), and `src/test/companion-evaluation-cases.ts` pins 30+
+  deterministic behavioral cases including prompt-injection messages.
+
+Setup and mode switching: `docs/03-engineering/openai-provider.md`.
 
 ## Local setup
 
