@@ -1,0 +1,394 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Saelis design tokens — finalized palette
+   ============================================================ */
+:root {
+  --sky-blue: #ddebfa;
+  --sky-lilac: #e9e2f8;
+  --sky-blush: #f8e3eb;
+  --sky-cream: #fff8e8;
+  --pearl-white: #fcfbff;
+  --cloud-white: #ffffff;
+  --cloud-blue: #edf6fd;
+  --cloud-lilac: #f0ecfa;
+  --cloud-pink: #fbeff4;
+  --cloud-mint: #ecf7f3;
+  --horizon-gold: #d8c18f;
+  --quiet-mint: #cde6de;
+  --accent-blue: #97b9dc;
+  --accent-lilac: #aa9ad4;
+  --accent-blush: #dcafc0;
+  --text-primary: #2d3650;
+  --text-secondary: #68728a;
+  --text-muted: #8992a5;
+}
+
+/* Expose tokens as Tailwind utilities (bg-sky-blue, text-primary, …) */
+@theme inline {
+  --color-sky-blue: var(--sky-blue);
+  --color-sky-lilac: var(--sky-lilac);
+  --color-sky-blush: var(--sky-blush);
+  --color-sky-cream: var(--sky-cream);
+  --color-pearl-white: var(--pearl-white);
+  --color-cloud-white: var(--cloud-white);
+  --color-cloud-blue: var(--cloud-blue);
+  --color-cloud-lilac: var(--cloud-lilac);
+  --color-cloud-pink: var(--cloud-pink);
+  --color-cloud-mint: var(--cloud-mint);
+  --color-horizon-gold: var(--horizon-gold);
+  --color-quiet-mint: var(--quiet-mint);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-lilac: var(--accent-lilac);
+  --color-accent-blush: var(--accent-blush);
+  --color-ink: var(--text-primary);
+  --color-ink-soft: var(--text-secondary);
+  --color-ink-muted: var(--text-muted);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--pearl-white);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--sky-lilac);
+  color: var(--text-primary);
+}
+
+/* Visible focus everywhere; never remove without replacement. */
+:focus-visible {
+  outline: 3px solid var(--accent-lilac);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--cloud-white);
+  color: var(--text-primary);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0 0 12px 0;
+  box-shadow: 0 4px 24px rgb(45 54 80 / 0.12);
+}
+.skip-link:focus-visible {
+  left: 0;
+}
+
+/* ============================================================
+   Celestial environment
+   Animation uses transform/opacity only. Blur layers are kept
+   few and are simplified on small screens for performance.
+   ============================================================ */
+.celestial-environment {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    var(--sky-blue) 0%,
+    var(--sky-lilac) 34%,
+    var(--sky-blush) 66%,
+    var(--sky-cream) 100%
+  );
+}
+
+.cloud-layer {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(48px);
+  opacity: 0.75;
+  will-change: transform;
+}
+.cloud-layer--high {
+  top: 6%;
+  left: -12%;
+  width: 62vw;
+  height: 22vh;
+  background: radial-gradient(closest-side, var(--cloud-blue), transparent 72%);
+  animation: cloud-drift 96s linear infinite alternate;
+}
+.cloud-layer--mid {
+  top: 36%;
+  right: -18%;
+  width: 68vw;
+  height: 26vh;
+  background: radial-gradient(closest-side, var(--cloud-lilac), transparent 72%);
+  animation: cloud-drift 128s linear infinite alternate-reverse;
+}
+.cloud-layer--low {
+  bottom: 8%;
+  left: -8%;
+  width: 74vw;
+  height: 24vh;
+  background: radial-gradient(closest-side, var(--cloud-pink), transparent 72%);
+  animation: cloud-drift 152s linear infinite alternate;
+}
+
+@keyframes cloud-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(6vw, -1.5vh, 0);
+  }
+}
+
+.horizon-glow {
+  position: absolute;
+  left: 50%;
+  bottom: -12vh;
+  width: 130vw;
+  height: 34vh;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse closest-side,
+    color-mix(in srgb, var(--horizon-gold) 55%, transparent) 0%,
+    transparent 78%
+  );
+  opacity: 0.8;
+}
+
+.pearl-particle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cloud-white);
+  box-shadow: 0 0 10px 3px rgb(255 255 255 / 0.55);
+  opacity: 0.5;
+  animation: particle-float 14s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+@keyframes particle-float {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.3;
+  }
+  to {
+    transform: translate3d(0, -18px, 0);
+    opacity: 0.65;
+  }
+}
+
+/* Fewer effects on small screens (performance + calm) */
+@media (max-width: 640px) {
+  .cloud-layer {
+    filter: blur(28px);
+  }
+  .cloud-layer--mid {
+    display: none;
+  }
+  .pearl-particle:nth-of-type(n + 5) {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Pearl glass surfaces
+   ============================================================ */
+.glass-surface {
+  background: color-mix(in srgb, var(--cloud-white) 72%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--cloud-white) 85%, var(--accent-lilac) 15%);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgb(45 54 80 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.7);
+}
+
+/* ============================================================
+   The Open Horizon symbol (pure CSS)
+   ============================================================ */
+.open-horizon {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+.open-horizon__sun {
+  position: absolute;
+  left: 50%;
+  bottom: 32%;
+  width: 56%;
+  height: 56%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 45%,
+    var(--sky-cream) 0%,
+    var(--horizon-gold) 62%,
+    color-mix(in srgb, var(--horizon-gold) 40%, transparent) 100%
+  );
+  clip-path: inset(0 0 46% 0);
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--horizon-gold) 45%, transparent);
+}
+.open-horizon__line {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: calc(32% + 27%);
+  height: 7%;
+  min-height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-blue) 18%,
+    var(--accent-blue) 82%,
+    transparent
+  );
+}
+.open-horizon--animated .open-horizon__sun {
+  animation: horizon-rise 7s ease-in-out infinite alternate;
+}
+@keyframes horizon-rise {
+  from {
+    transform: translateX(-50%) translateY(3%);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateX(-50%) translateY(-3%);
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   The Light
+   ============================================================ */
+.the-light {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 42%,
+    var(--cloud-white) 0%,
+    var(--sky-cream) 38%,
+    color-mix(in srgb, var(--horizon-gold) 55%, var(--sky-cream)) 72%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 32px 6px color-mix(in srgb, var(--horizon-gold) 35%, transparent),
+    0 0 80px 18px color-mix(in srgb, var(--sky-cream) 55%, transparent);
+  will-change: transform, opacity;
+}
+
+.the-light--resting {
+  animation: light-breathe 9s ease-in-out infinite;
+}
+.the-light--welcoming {
+  animation: light-breathe 5s ease-in-out infinite;
+}
+.the-light--listening {
+  animation: light-breathe 7s ease-in-out infinite;
+  box-shadow:
+    0 0 36px 8px color-mix(in srgb, var(--accent-blue) 30%, transparent),
+    0 0 80px 18px color-mix(in srgb, var(--sky-cream) 55%, transparent);
+}
+.the-light--receiving {
+  animation: light-shimmer 3.5s ease-in-out infinite;
+}
+.the-light--reflecting {
+  animation: light-breathe 11s ease-in-out infinite;
+  box-shadow:
+    0 0 36px 8px color-mix(in srgb, var(--accent-lilac) 32%, transparent),
+    0 0 80px 18px color-mix(in srgb, var(--sky-cream) 55%, transparent);
+}
+.the-light--guiding {
+  animation: light-breathe 6s ease-in-out infinite;
+  box-shadow:
+    0 0 36px 8px color-mix(in srgb, var(--quiet-mint) 45%, transparent),
+    0 0 80px 18px color-mix(in srgb, var(--sky-cream) 55%, transparent);
+}
+.the-light--celebrating {
+  animation: light-shimmer 2.4s ease-in-out infinite;
+  box-shadow:
+    0 0 42px 10px color-mix(in srgb, var(--accent-blush) 42%, transparent),
+    0 0 90px 22px color-mix(in srgb, var(--sky-cream) 60%, transparent);
+}
+.the-light--still {
+  animation: none;
+  opacity: 0.92;
+}
+
+@keyframes light-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+@keyframes light-shimmer {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  40% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.02);
+    opacity: 0.98;
+  }
+}
+
+/* ============================================================
+   Stillness halo timer
+   ============================================================ */
+.halo-ring {
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--horizon-gold) 55%, transparent);
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--horizon-gold) 25%, transparent);
+}
+.halo-ring--active {
+  animation: light-breathe 8s ease-in-out infinite;
+}
+
+/* ============================================================
+   Reduced motion: stop all atmospheric + brand animation.
+   The .motion-off class allows an explicit in-app override.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .cloud-layer,
+  .pearl-particle,
+  .the-light,
+  .open-horizon--animated .open-horizon__sun,
+  .halo-ring--active {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.motion-off .cloud-layer,
+.motion-off .pearl-particle,
+.motion-off .the-light,
+.motion-off .open-horizon__sun,
+.motion-off .halo-ring--active,
+.the-light.motion-off {
+  animation: none !important;
+}

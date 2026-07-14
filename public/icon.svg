@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The Open Horizon: a low sun meeting a quiet line -->
+  <defs>
+    <radialGradient id="sun" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#FFF8E8"/>
+      <stop offset="62%" stop-color="#D8C18F"/>
+      <stop offset="100%" stop-color="#D8C18F" stop-opacity="0.4"/>
+    </radialGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#97B9DC" stop-opacity="0"/>
+      <stop offset="18%" stop-color="#97B9DC"/>
+      <stop offset="82%" stop-color="#97B9DC"/>
+      <stop offset="100%" stop-color="#97B9DC" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#FCFBFF"/>
+  <clipPath id="half">
+    <rect x="14" y="18" width="36" height="18"/>
+  </clipPath>
+  <circle cx="32" cy="36" r="14" fill="url(#sun)" clip-path="url(#half)"/>
+  <rect x="8" y="37" width="48" height="3" rx="1.5" fill="url(#line)"/>
+</svg>

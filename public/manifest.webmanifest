@@ -1,0 +1,17 @@
+{
+  "name": "Saelis",
+  "short_name": "Saelis",
+  "description": "A quiet place to feel understood, think clearly, and find what comes next.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FCFBFF",
+  "theme_color": "#DDEBFA",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
