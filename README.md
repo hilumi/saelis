@@ -142,6 +142,33 @@ a rare (~3% of nights, date-stable) aurora. The Light borrows a visual tone from
 
 Details: `docs/02-product/living-sky.md` and `docs/03-engineering/sky-engine-architecture.md`.
 
+## Constellations & Stewardship (Phase 5)
+
+Memory is now fully visible and user-governed, and the product gains a privacy-safe stewardship
+workspace.
+
+- **Constellations** (`/constellations`): every approved memory appears as a deterministic,
+  keyboard-accessible star in the Living Sky's star field; North Stars (explicit values and
+  long-term intentions — never inferred) are shape-distinct; a list view is always available.
+  Opening a star sends nothing to the model; "Reflect with Saelis" is a separate explicit choice.
+- **Memory Center** (`/settings/memories`, "How Saelis remembers"): search, filter, sort, edit,
+  reclassify, remove, clear all, and JSON export (`saelis-memories-YYYY-MM-DD.json` — no user or
+  database identifiers). Deletion remains permanent per the Memory Charter.
+- **Proposals** can be edited before saving and carry an explicit kind choice; the API still never
+  auto-saves. Prohibited categories and obvious secret material are rejected server-side.
+- **Horizon hand-off**: suggested steps are added only by explicit choice, idempotently.
+- **Founder Console** (`/founder`): server-verified `founder` role (see
+  `docs/03-engineering/founder-console.md`; roles cannot be self-assigned and are granted only by
+  a manual privileged database action). Displays configuration status and aggregate counts only —
+  no messages, no memory content, no names, no identifiers, no per-user drill-down, enforced by
+  counts-only security-definer functions.
+- **Telemetry** (`stewardship_events`): opt-in via the existing analytics privacy setting,
+  content-free by schema (`docs/03-engineering/privacy-safe-telemetry.md`). Optional
+  "Helpful / Not quite" feedback stores categories, never text.
+
+Version `v0.5.0` is exposed at `/api/health`, on About, and in the Founder Console. See
+CHANGELOG.md and ROADMAP.md.
+
 ## Local setup
 
 ```sh

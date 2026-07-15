@@ -29,11 +29,14 @@ backlog. **[Implemented]**
 
 **Stillness** is deliberate nothing: a quiet stretch with a halo timer and no output. **[Implemented]**
 
+**Constellations** are approved memories placed among the stars — memory made visible,
+intentional, and removable, with North Stars marking chosen directions. **[Implemented — see
+docs/02-product/constellations.md]**
+
 ## Future concepts (not implemented; do not build in this sprint)
 
 - **The Sky as seasonal atmosphere** — seasonal shifts layered onto the implemented diurnal sky.
-- **Constellations** — approved memories arranged as stars the user can see and touch (the visible
-  form of the Memory Charter's Constellation class).
+
 - **Seasons** — long-arc reflection: what this winter was like, what spring changed.
 - **Quiet Days** — a gentle mode where Saelis deliberately recedes; presence at its minimum.
 - **The Garden** — a place where completed steps and kept intentions grow into something visible,
@@ -44,16 +47,16 @@ backlog. **[Implemented]**
 
 ## How the needs map
 
-| Need                             | Experience                                     |
-| -------------------------------- | ---------------------------------------------- |
-| To cross a threshold gently      | Arrival                                        |
-| To be accompanied, not used      | Stay Here                                      |
-| To talk and be received          | Conversation + The Light                       |
-| To see one way forward           | Horizon                                        |
-| To see one's own weather         | Echoes                                         |
-| To stop entirely                 | Stillness                                      |
-| To be remembered only by consent | Constellations (future) / Memory Charter (now) |
-| To end well                      | Closing lines → Last Light (future)            |
+| Need                             | Experience                          |
+| -------------------------------- | ----------------------------------- |
+| To cross a threshold gently      | Arrival                             |
+| To be accompanied, not used      | Stay Here                           |
+| To talk and be received          | Conversation + The Light            |
+| To see one way forward           | Horizon                             |
+| To see one's own weather         | Echoes                              |
+| To stop entirely                 | Stillness                           |
+| To be remembered only by consent | Constellations (implemented)        |
+| To end well                      | Closing lines → Last Light (future) |
 
 ## Diagram
 
@@ -67,7 +70,7 @@ graph TD
     HORIZON["Horizon — one next step"]
     ECHOES["Echoes — weather history"]
     STILL["Stillness — deliberate nothing"]
-    CONST["Constellations (future)"]
+    CONST["Constellations — implemented"]
     SEASONS["Seasons (future)"]
     GARDEN["The Garden (future)"]
     LAST["Last Light (future)"]
@@ -80,7 +83,7 @@ graph TD
     CONV --> LIGHT
     ARRIVAL --> ECHOES
     ECHOES -.-> SEASONS
-    CONV -.-> CONST
+    CONV --> CONST
     HORIZON -.-> GARDEN
     CONV -.-> LAST
 ```

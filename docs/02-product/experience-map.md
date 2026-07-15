@@ -210,3 +210,23 @@ exit, failure states, and safety considerations. Persistence always respects pri
 - **Exit.** "A little lighter."
 - **Failure states.** Dramatic sendoffs; retention hooks; closing every trivial exchange.
 - **Safety.** Crisis conversations never receive poetic closings.
+
+### 19. User reviews their memories
+
+- **Entry.** `/settings/memories` or `/constellations`.
+- **Need.** To see, understand, and control everything Saelis keeps.
+- **Behavior.** Every memory shows its content, kind, reason, and dates; edit, reclassify,
+  remove, export, and clear-all are always available. Nothing is scored.
+- **Light.** reflecting.
+- **Persistence.** Edits update `updated_at`; deletion is permanent.
+- **Exit.** Freely; "Keep only what still feels useful."
+- **Failure states.** Any hint that more memories are "better"; quantity rewards — prohibited.
+- **Safety.** Prohibited categories and credential material are rejected on edit and approval.
+
+### 20. Founder stewards the product
+
+- **Entry.** `/founder`, only with the server-verified founder role.
+- **Need.** Operational awareness without surveillance.
+- **Behavior.** Aggregate counts and configuration status only; no user content of any kind.
+- **Failure states.** Any per-user drill-down or content exposure — structurally impossible by
+  policy and by the counts-only aggregate functions.

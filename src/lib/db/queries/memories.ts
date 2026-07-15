@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { Database, Tables } from "@/lib/supabase/types";
+import type { Database, Tables, TablesUpdate } from "@/lib/supabase/types";
 
 type Client = SupabaseClient<Database>;
 
@@ -80,6 +80,63 @@ export async function deleteMemoryPermanently(
     .eq("id", memoryId)
     .eq("user_id", userId);
   if (error) throw new Error("Could not delete that memory.");
+}
+
+export async function updateMemory(
+  supabase: Client,
+  userId: string,
+  memoryId: string,
+  values: Pick<TablesUpdate<"companion_memories">, "kind" | "title" | "content" | "reason">,
+): Promise<void> {
+  const { error } = await supabase
+    .from("companion_memories")
+    .update(values)
+    .eq("id", memoryId)
+    .eq("user_id", userId);
+  if (error) throw new Error("Could not update that memory.");
+}
+
+/** User-created memory (e.g. a North Star): explicit, active, approved. */
+export async function createUserMemory(
+  supabase: Client,
+  userId: string,
+  values: {
+    kind: "constellation" | "north-star";
+    title: string | null;
+    content: string;
+    reason: string | null;
+  },
+): Promise<void> {
+  const { error } = await supabase.from("companion_memories").insert({
+    user_id: userId,
+    category: values.kind === "north-star" ? "north-star" : "shared-context",
+    content: values.content,
+    kind: values.kind,
+    title: values.title,
+    reason: values.reason,
+    source: "explicit",
+    status: "active",
+    user_approved: true,
+  });
+  if (error) throw new Error("Could not keep that memory.");
+}
+
+/** Transparency only — never engagement data. Sets last_used_at. */
+export async function markMemoriesUsedNow(
+  supabase: Client,
+  userId: string,
+  memoryIds: string[],
+): Promise<void> {
+  if (memoryIds.length === 0) return;
+  try {
+    await supabase
+      .from("companion_memories")
+      .update({ last_used_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .in("id", memoryIds);
+  } catch {
+    // Transparency metadata must never break a response.
+  }
 }
 
 export async function deleteAllMemories(supabase: Client, userId: string): Promise<void> {

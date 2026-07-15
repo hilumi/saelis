@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/guidance", label: "Guidance" },
   { href: "/stillness", label: "Stillness" },
   { href: "/horizon", label: "Horizon" },
+  { href: "/constellations", label: "Constellations" },
   { href: "/echoes", label: "Echoes" },
   { href: "/settings/companion", label: "Settings" },
 ] as const;

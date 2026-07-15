@@ -1,4 +1,5 @@
 import type {
+  MEMORY_KINDS,
   ENCOURAGEMENT_STYLES,
   FAITH_PREFERENCES,
   HUMOR_LEVELS,
@@ -23,6 +24,7 @@ export type FaithPreference = (typeof FAITH_PREFERENCES)[number];
 export type PlanningStyle = (typeof PLANNING_STYLES)[number];
 export type EncouragementStyle = (typeof ENCOURAGEMENT_STYLES)[number];
 
+export type MemoryKind = (typeof MEMORY_KINDS)[number];
 export type MemoryStatus = (typeof MEMORY_STATUSES)[number];
 export type MemorySource = (typeof MEMORY_SOURCES)[number];
 

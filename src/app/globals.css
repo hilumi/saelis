@@ -655,3 +655,50 @@ body {
     border-color: var(--text-secondary);
   }
 }
+
+/* Constellations — interactive memory stars (44px touch target, shape-coded) */
+.constellation-panel {
+  background: linear-gradient(180deg, #767fa6 0%, #9098bc 55%, #afb2cf 100%);
+}
+.constellation-backdrop-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #fbfbff;
+  pointer-events: none;
+}
+.memory-star {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin-left: -22px;
+  margin-top: -22px;
+  border-radius: 50%;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.memory-star::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fffdf5;
+  box-shadow: 0 0 12px 4px rgba(255, 248, 232, 0.65);
+}
+.memory-star--north::after {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  transform: rotate(45deg);
+  background: #fff8e8;
+  box-shadow:
+    0 0 16px 6px rgba(216, 193, 143, 0.7),
+    0 0 0 3px rgba(255, 248, 232, 0.5);
+}
+.memory-star:focus-visible {
+  outline: 3px solid #fff8e8;
+  outline-offset: 2px;
+}

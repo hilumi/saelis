@@ -1,4 +1,5 @@
 import { approveProposedMemory } from "@/app/(app)/actions";
+import { recordResponseFeedback } from "@/app/(app)/memory-actions";
 import { ConversationView } from "@/components/companion/conversation-view";
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { InlineNotice } from "@/components/ui/inline-notice";
@@ -18,7 +19,10 @@ export default function ConversationPage() {
           yet, and responses are simple placeholders.
         </InlineNotice>
       ) : null}
-      <ConversationView approveMemoryAction={approveProposedMemory} />
+      <ConversationView
+        approveMemoryAction={approveProposedMemory}
+        feedbackAction={recordResponseFeedback}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { OpenHorizon } from "@/components/brand/open-horizon";
 import { MISSION } from "@/lib/constants";
+import { APP_VERSION } from "@/lib/version";
 
 import type { Metadata } from "next";
 
@@ -31,6 +32,7 @@ export default function AboutPage() {
           when things are heavier than a companion should hold, it points you to real human support.
         </p>
       </div>
+      <p className="text-xs text-ink-muted">Saelis v{APP_VERSION}</p>
       {process.env.NODE_ENV === "development" ? (
         <aside className="glass-surface p-6 text-sm text-ink-soft">
           <h2 className="mb-1 font-semibold text-ink">Read the philosophy</h2>

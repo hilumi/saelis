@@ -51,6 +51,18 @@ reproduction steps. You'll get an acknowledgment within a few days.
 - Provider errors map to typed classes with calm public copy; raw SDK errors, status bodies, and
   stack traces never reach the client.
 
+## Roles and stewardship (Phase 5)
+
+- `app_roles` has RLS with select-own only and NO write policies: roles cannot be self-assigned
+  or client-asserted; assignment is a manual privileged database action. Founder routes verify
+  the role server-side and 404 otherwise.
+- The founder role grants no bypass of user-data RLS. Founder aggregates come exclusively from
+  narrowly scoped SECURITY DEFINER functions that check authorization, pin search_path, and
+  return counts only.
+- `stewardship_events` is content-free by schema (fixed columns, no metadata field) and written
+  only with the user's analytics opt-in. Memory edits re-check prohibited categories and reject
+  obvious credential material.
+
 ## Known gaps (tracked for future phases)
 
 - Content-Security-Policy is not yet strict.

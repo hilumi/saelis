@@ -49,6 +49,7 @@ export const ENCOURAGEMENT_STYLES = ["quiet", "warm", "bright"] as const;
 
 export const CONVERSATION_STATUSES = ["active", "completed", "archived"] as const;
 export const TURN_ROLES = ["user", "assistant", "system"] as const;
+export const MEMORY_KINDS = ["constellation", "north-star"] as const;
 export const MEMORY_STATUSES = ["proposed", "active", "rejected", "deleted"] as const;
 export const MEMORY_SOURCES = [
   "explicit",

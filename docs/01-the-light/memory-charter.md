@@ -18,12 +18,12 @@ already govern. _(Maps to: the LightContext — never written anywhere by the en
 Short-lived context that may expire automatically ("this week is finals week"). Not implemented;
 when built, it will be proposed and approved like any memory and will visibly expire.
 
-### 3. Constellation
+### 3. Constellation — _implemented (v0.5)_
 
 A user-approved meaningful memory: a sister's name, a dog, a hope. Always visible to the user,
 always removable. _(Maps to: `companion_memories` with `status='active', user_approved=true`.)_
 
-### 4. North Star
+### 4. North Star — _implemented (v0.5)_
 
 An explicitly approved core preference or identity detail — the highest-sensitivity class, e.g.
 faith preference. **Never inferred silently.** _(Maps to: `companion_profiles` fields the user
@@ -44,10 +44,10 @@ These conceptual classes map onto the existing database model without schema cha
 - **Deleted memory.** Deletion is permanent (MVP policy; no legal retention applies). Deleted
   memories are never supplied to the model.
 - **Expiration.** Reserved for Gentle Breeze (future); expiry will be visible, never silent.
-- **Review.** Users can see every memory. _(UI for per-item review is planned; bulk deletion
-  exists today in privacy settings.)_
+- **Review.** Implemented: the Memory Center (`/settings/memories`) lists every memory with
+  search, filter, sort, and per-item edit/reclassify/delete; Constellations shows them in the sky.
 - **Editing.** Users may re-state a memory; the old one is deleted, the new one approved fresh.
-- **Export.** Memories belong to the user; export ships with the broader data-export work.
+- **Export.** Implemented: user-initiated JSON export containing no internal identifiers.
 - **Deletion.** One step, immediate, no persuasion.
 
 ## Sensitive information — never automatically stored

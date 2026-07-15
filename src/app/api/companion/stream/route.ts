@@ -11,7 +11,7 @@ import {
   getRecentTurns,
   saveTurn,
 } from "@/lib/db/queries/conversations";
-import { listApprovedActiveMemories } from "@/lib/db/queries/memories";
+import { listApprovedActiveMemories, markMemoriesUsedNow } from "@/lib/db/queries/memories";
 import { getCompanionProfile, getPrivacySettings } from "@/lib/db/queries/profile";
 import { beginGeneration, endGeneration } from "@/lib/idempotency";
 import { createLightPlan, LightContextError } from "@/lib/light";
@@ -289,6 +289,20 @@ export async function POST(request: Request) {
             });
           }
 
+          // Transparency, never engagement data: note when approved memories
+          // actually accompanied a successful request.
+          const memoriesUsed =
+            plan.understanding.safetyLevel === "urgent" || !plan.memory.mayUseApprovedMemories
+              ? 0
+              : memories.length;
+          if (memoriesUsed > 0) {
+            await markMemoriesUsedNow(
+              supabase,
+              user.id,
+              memories.map((memory) => memory.id),
+            );
+          }
+
           // Persist ONLY after full validation — never an incomplete turn,
           // and never a proposed memory (that requires user approval).
           const persistedConversationId = await persist(response);
@@ -296,6 +310,7 @@ export async function POST(request: Request) {
           send("complete", {
             conversationId: persistedConversationId,
             response,
+            memoriesUsed,
             lightState: plan.reflection.suggestedLightState,
             // Limited metadata for the development diagnostics panel only.
             ...(process.env.NODE_ENV === "development" && metadata

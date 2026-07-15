@@ -9,6 +9,7 @@
  * See README "Generating database types".
  */
 import type { ENERGIES, MOODS, SUPPORT_NEEDS } from "@/lib/constants";
+import type { MemoryKind } from "@/types/companion";
 import type {
   EncouragementStyle,
   FaithPreference,
@@ -96,6 +97,12 @@ export type CompanionMemoryRow = {
   user_id: string;
   category: string;
   content: string;
+  kind: MemoryKind;
+  title: string | null;
+  reason: string | null;
+  position_seed: string | null;
+  last_used_at: string | null;
+  use_count: number;
   source: MemorySource;
   status: MemoryStatus;
   user_approved: boolean;
@@ -110,4 +117,26 @@ export type UserPrivacySettingsRow = {
   allow_product_analytics: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type AppRoleRow = {
+  user_id: string;
+  role: "founder" | "admin" | "support";
+  created_at: string;
+};
+
+export type StewardshipEventRow = {
+  id: string;
+  user_id: string;
+  event_type: string;
+  provider: string | null;
+  model: string | null;
+  latency_bucket: string | null;
+  support_mode: string | null;
+  safety_level: string | null;
+  error_category: string | null;
+  memory_kind: string | null;
+  feedback_category: string | null;
+  app_version: string | null;
+  created_at: string;
 };

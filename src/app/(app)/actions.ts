@@ -100,10 +100,9 @@ export async function savePrivacySettings(input: unknown): Promise<ActionResult>
   }
 }
 
-const approveMemorySchema = z.object({
-  category: z.string().trim().min(1).max(100),
-  content: z.string().trim().min(1).max(1000),
-});
+import { memoryApprovalSchema } from "@/lib/validation/memory";
+import { isProhibitedMemoryCategory } from "@/lib/light/memory-policy";
+import { recordStewardshipEvent } from "@/lib/db/queries/stewardship";
 
 /**
  * The ONLY path by which a proposed memory becomes real: explicit user
@@ -112,9 +111,12 @@ const approveMemorySchema = z.object({
 export async function approveProposedMemory(input: unknown): Promise<ActionResult> {
   try {
     const user = await requireUser();
-    const parsed = approveMemorySchema.safeParse(input);
+    const parsed = memoryApprovalSchema.safeParse(input);
     if (!parsed.success) {
       return { ok: false, error: "That memory couldn't be read." };
+    }
+    if (isProhibitedMemoryCategory(parsed.data.category)) {
+      return { ok: false, error: "That kind of detail is never kept as a memory." };
     }
     const supabase = await createClient();
     const privacy = await getPrivacySettings(supabase, user.id);
@@ -125,11 +127,20 @@ export async function approveProposedMemory(input: unknown): Promise<ActionResul
       user_id: user.id,
       category: parsed.data.category,
       content: parsed.data.content,
+      kind: parsed.data.kind,
+      title: parsed.data.title,
+      reason: parsed.data.reason,
       source: "user-approved-inference",
       status: "active",
       user_approved: true,
     });
     if (error) return { ok: false, error: CALM_ERROR };
+    if (privacy?.allow_product_analytics) {
+      await recordStewardshipEvent(supabase, user.id, {
+        event_type: parsed.data.edited ? "memory_proposal_edited" : "memory_proposal_accepted",
+        memory_kind: parsed.data.kind,
+      });
+    }
     return { ok: true };
   } catch {
     return { ok: false, error: CALM_ERROR };
