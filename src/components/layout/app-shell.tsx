@@ -20,7 +20,7 @@ export function AppShell({ children, signOutAction }: AppShellProps) {
       </a>
       {/* Atmosphere is provided globally by the Living Sky (root layout). */}
       <header className="mx-auto flex w-full max-w-4xl flex-wrap items-center gap-4 px-4 py-4">
-        <Link href="/arrival" className="inline-flex items-center gap-2 rounded-full">
+        <Link href="/home" className="inline-flex items-center gap-2 rounded-full">
           <OpenHorizon size={32} label="Saelis home" />
           <SaelisWordmark />
         </Link>

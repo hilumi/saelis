@@ -166,8 +166,19 @@ workspace.
   content-free by schema (`docs/03-engineering/privacy-safe-telemetry.md`). Optional
   "Helpful / Not quite" feedback stores categories, never text.
 
-Version `v0.5.0` is exposed at `/api/health`, on About, and in the Founder Console. See
-CHANGELOG.md and ROADMAP.md.
+Version is exposed at `/api/health`, on About, and in the Founder Console. See CHANGELOG.md and
+ROADMAP.md.
+
+## Home (Phase 6)
+
+`/home` is now the post-sign-in destination: one continuous quiet place uniting the Living Sky,
+The Light, a time-aware greeting, four quiet doors (Talk / Arrive / Stay Here / Find one step),
+at most one dismissible continuation, and calm glimpses of Horizon and Constellations — never a
+dashboard. Return context is coarse and device-local (no streaks, no absence counts, no guilt);
+private message and memory content never appear on Home. Dev previews:
+`/home?preview=first-visit|returning|horizon|constellations|north-star|empty` (+ `?sky=`).
+Details: `docs/02-product/home.md`, `docs/02-product/returning-home.md`,
+`docs/03-engineering/home-architecture.md`.
 
 ## Local setup
 

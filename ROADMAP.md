@@ -4,8 +4,9 @@
 - **v0.2 Light Engine** — shipped
 - **v0.3 Awakening** — shipped
 - **v0.4 Living Sky** — shipped
-- **v0.5 Constellations & Stewardship** — shipped (this release)
-- **v0.6 (proposed)** — provider-side safety classification behind the urgent-override contract;
+- **v0.5 Constellations & Stewardship** — shipped
+- **v0.6 Home** — shipped (this release)
+- **v0.7 (proposed)** — provider-side safety classification behind the urgent-override contract;
   managed rate limiting/idempotency; Gentle Breeze (expiring context) per the Memory Charter
 - **Later** — Seasons, Quiet Days, The Garden, Weather Within, Reflections, Last Light; data
   export beyond memories; internationalized crisis resources; legal/privacy review before beta

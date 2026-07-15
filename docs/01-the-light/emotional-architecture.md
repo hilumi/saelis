@@ -29,6 +29,9 @@ backlog. **[Implemented]**
 
 **Stillness** is deliberate nothing: a quiet stretch with a halo timer and no output. **[Implemented]**
 
+**Home** is the threshold room of the whole house — arrival, presence, direction, and memory
+within reach, none of them demanded. **[Implemented — see docs/02-product/home.md]**
+
 **Constellations** are approved memories placed among the stars — memory made visible,
 intentional, and removable, with North Stars marking chosen directions. **[Implemented — see
 docs/02-product/constellations.md]**

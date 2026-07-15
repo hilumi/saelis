@@ -26,7 +26,7 @@ export default function SignInPage() {
         setPending(false);
         return;
       }
-      router.push("/arrival");
+      router.push("/home");
       router.refresh();
     } catch {
       setError("Sign-in isn't available right now. Please try again in a moment.");

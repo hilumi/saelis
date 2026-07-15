@@ -64,6 +64,22 @@ export async function saveTurn(
   return data;
 }
 
+/** Timestamp of the most recent conversation, or null. Never content. */
+export async function getLatestConversationTimestamp(
+  supabase: Client,
+  userId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("conversations")
+    .select("updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return null;
+  return data?.updated_at ?? null;
+}
+
 export async function deleteAllConversations(supabase: Client, userId: string): Promise<void> {
   // conversation_turns cascade from conversations.
   const { error } = await supabase.from("conversations").delete().eq("user_id", userId);

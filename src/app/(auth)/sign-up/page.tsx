@@ -39,7 +39,7 @@ export default function SignUpPage() {
         return;
       }
       if (data.session) {
-        router.push("/arrival");
+        router.push("/home");
         router.refresh();
         return;
       }

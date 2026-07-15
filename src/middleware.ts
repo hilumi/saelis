@@ -4,6 +4,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 
 /** Routes that require a signed-in user. */
 const PROTECTED_PREFIXES = [
+  "/home",
   "/arrival",
   "/conversation",
   "/stay-here",
@@ -35,7 +36,7 @@ export async function middleware(request: NextRequest) {
 
   if (user && AUTH_ROUTES.includes(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/arrival";
+    url.pathname = "/home";
     url.search = "";
     return NextResponse.redirect(url);
   }

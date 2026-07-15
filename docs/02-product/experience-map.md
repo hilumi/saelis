@@ -230,3 +230,15 @@ exit, failure states, and safety considerations. Persistence always respects pri
 - **Behavior.** Aggregate counts and configuration status only; no user content of any kind.
 - **Failure states.** Any per-user drill-down or content exposure — structurally impossible by
   policy and by the counts-only aggregate functions.
+
+### 21. User comes Home
+
+- **Entry.** Sign-in lands on `/home`; the wordmark returns there from anywhere.
+- **Need.** To arrive somewhere, not at a to-do list.
+- **Behavior.** Greeting by chosen name and time of day; four quiet doors; at most one gentle,
+  dismissible continuation; glimpses of Horizon and the memory sky; a quiet way to step away.
+- **Light.** welcoming, settling to resting; listening when a door is focused.
+- **Persistence.** Nothing new — a device-local last-visit timestamp only.
+- **Exit.** Free, with one optional Last Light line. "Take only what feels useful."
+- **Failure states.** Anything resembling a dashboard, streak, or demand — prohibited.
+- **Safety.** No mood inference; no content on screen the user didn't choose to keep visible.

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.0 — Home (2026-07)
+
+- `/home`: a sanctuary landing after sign-in — Living Sky + The Light + time-aware greeting
+- Four quiet doors (Talk, Arrive, Stay Here, Find one step); no dashboard, no grid of demands
+- At most one dismissible continuation (conversation > horizon > arrival > North Star), private-content-free
+- Horizon and Constellations glimpses with calm empty states; no overdue/shame language
+- Quiet return context (coarse, device-local; no streaks, counts, or guilt)
+- Last Light groundwork: one optional closing line on stepping away
+- Navigation reordered around Home; sign-in/callback now land on `/home`
+- Dev previews: `/home?preview=…` (fictional, development-only)
+
 ## v0.5.0 — Constellations & Stewardship (2026-07)
 
 - Constellations: approved memories as deterministic, keyboard-accessible stars (`/constellations`)

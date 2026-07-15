@@ -6,13 +6,13 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/arrival", label: "Arrival" },
-  { href: "/conversation", label: "Conversation" },
-  { href: "/stay-here", label: "Stay Here" },
-  { href: "/guidance", label: "Guidance" },
-  { href: "/stillness", label: "Stillness" },
+  { href: "/home", label: "Home" },
+  { href: "/conversation", label: "Talk" },
   { href: "/horizon", label: "Horizon" },
   { href: "/constellations", label: "Constellations" },
+  { href: "/arrival", label: "Arrival" },
+  { href: "/stay-here", label: "Stay Here" },
+  { href: "/stillness", label: "Stillness" },
   { href: "/echoes", label: "Echoes" },
   { href: "/settings/companion", label: "Settings" },
 ] as const;
