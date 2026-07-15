@@ -1,3 +1,5 @@
+import { LivingSky } from "@/components/sky/living-sky";
+import { SkyProvider } from "@/components/sky/sky-provider";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 
 import "./globals.css";
@@ -33,7 +35,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">
+        {/* The Living Sky: one continuous atmosphere behind every route.
+            Children stay server components; only the sky boundary is client. */}
+        <SkyProvider>
+          <LivingSky />
+          {children}
+        </SkyProvider>
+      </body>
     </html>
   );
 }

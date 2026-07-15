@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { TheLight } from "@/components/brand/the-light";
+import { useSky } from "@/components/sky/use-sky";
 import { Button } from "@/components/ui/button";
 
 const GENTLE_WORDS = [
@@ -19,11 +20,12 @@ const GENTLE_WORDS = [
  */
 export function PresenceView() {
   const [wordIndex, setWordIndex] = useState(0);
+  const { state: sky } = useSky();
   const currentWord = GENTLE_WORDS[wordIndex % GENTLE_WORDS.length] ?? GENTLE_WORDS[0];
 
   return (
     <div className="flex flex-col items-center gap-8 py-8 text-center">
-      <TheLight state="resting" size={140} />
+      <TheLight state="resting" skyTone={sky.lightTone} size={140} />
       <p aria-live="polite" className="max-w-md text-lg text-ink">
         {currentWord}
       </p>

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockGetUser, mockFrom } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
@@ -63,9 +63,33 @@ function privacyRow(
   };
 }
 
+/**
+ * TEST ISOLATION — these tests exercise the deterministic MOCK companion path.
+ * The developer's environment (e.g. `.env.local` / shell) may legitimately set
+ * COMPANION_PROVIDER=openai for the running app; the suite must never inherit
+ * that, or the route would select the live provider and attempt a real call.
+ * The provider factory reads the env at call time (no cached singleton), so
+ * pinning the variable before each request is sufficient and deterministic.
+ */
+const ORIGINAL_COMPANION_PROVIDER = process.env.COMPANION_PROVIDER;
+
+beforeAll(() => {
+  process.env.COMPANION_PROVIDER = "mock";
+});
+
+afterAll(() => {
+  if (ORIGINAL_COMPANION_PROVIDER === undefined) {
+    delete process.env.COMPANION_PROVIDER;
+  } else {
+    process.env.COMPANION_PROVIDER = ORIGINAL_COMPANION_PROVIDER;
+  }
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
   resetRateLimiter();
+  // Re-pin every test in case an individual test adjusts the environment.
+  process.env.COMPANION_PROVIDER = "mock";
   // The route checks for Supabase configuration before authenticating.
   process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost:54321";
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "test-publishable-key";
@@ -167,6 +191,29 @@ describe("POST /api/companion", () => {
     const response = await POST(companionRequest({ message: "hello there" }));
     const payload = (await response.json()) as { response: { closingLine: string | null } };
     expect(payload.response.closingLine).toBeNull();
+  });
+
+  it("stays on the mock provider even when the ambient environment prefers openai (regression)", async () => {
+    // Simulate what a developer machine looks like when `.env.local` (or the
+    // shell) configures the live provider for the running app. The suite's
+    // isolation must still pin the mock path — deterministic output, no
+    // network, no OpenAI call.
+    process.env.COMPANION_PROVIDER = "mock"; // suite pin, exactly as beforeEach applies
+    process.env.OPENAI_API_KEY = "sk-test-never-used";
+    process.env.OPENAI_MODEL = "never-used-model";
+    try {
+      const response = await POST(companionRequest({ message: "I just need to vent." }));
+      expect(response.status).toBe(200);
+      const payload = (await response.json()) as {
+        response: { supportMode: string; message: string };
+      };
+      // Deterministic mock output — a live model could never be this exact.
+      expect(payload.response.supportMode).toBe("witness");
+      expect(payload.response.message).toContain("I'm taking that in");
+    } finally {
+      delete process.env.OPENAI_API_KEY;
+      delete process.env.OPENAI_MODEL;
+    }
   });
 
   it("rate limits rapid-fire requests with 429", async () => {

@@ -114,6 +114,34 @@ language engine, not Saelis's identity, and no claim of genuine emotional unders
 
 Setup and mode switching: `docs/03-engineering/openai-provider.md`.
 
+## The Living Sky (Phase 4)
+
+Saelis now has a global, time-driven atmosphere: eight phases (pre-dawn 04:00 · dawn 05:30 ·
+morning 07:00 · day 11:00 · golden hour 16:00 · sunset 18:30 · twilight 20:00 · night 21:30, all
+atmospheric defaults, not astronomical claims) with smooth 30-minute palette interpolation, a
+diffused sun, a pearl moon, date-seeded deterministic stars, phase-tinted volumetric clouds, and
+a rare (~3% of nights, date-stable) aurora. The Light borrows a visual tone from the sky
+(silver/pearl/warm-pearl/golden/blush/moonlit/aurora) without any change to its behavior.
+
+> **The Living Sky is driven by local device time. It does not infer mood, inspect conversation
+> content, request location, or use a weather service.**
+
+- **Privacy.** The Sky Engine's entire input is a `Date` (plus the calendar date as a seed) and
+  the reduced-motion/contrast media preferences. Nothing else can reach it.
+- **Accessibility.** Reduced motion stills every drift and breath while keeping the full colored
+  atmosphere; high contrast quiets atmospheric layers and solidifies glass; night never becomes a
+  dark theme — ink text stays readable in all eight phases. No flashing, no pulsing.
+- **Performance.** CSS gradients/transforms only, one state update per minute (no animation-frame
+  time reads), memoized seeded stars (90 max, 36 under 480px), reduced blur and layers on mobile,
+  no route-level sky remounts, hydration-stable server default.
+- **Development preview.** In development only, append `?sky=dawn|morning|day|golden-hour|sunset|twilight|night|pre-dawn`
+  or `?sky=aurora` to any URL. Ignored in production, never persisted.
+- **Deferred.** Weather, location (real sunrise/sunset would require explicit opt-in location
+  access later), emotional atmosphere, Seasons, Constellations, Garden, precipitation, audio, and
+  manual themes.
+
+Details: `docs/02-product/living-sky.md` and `docs/03-engineering/sky-engine-architecture.md`.
+
 ## Local setup
 
 ```sh

@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { OpenHorizon } from "@/components/brand/open-horizon";
 import { SaelisWordmark } from "@/components/brand/saelis-wordmark";
-import { CelestialEnvironment } from "@/components/celestial/celestial-environment";
 import { CelestialNavigation } from "@/components/layout/celestial-navigation";
 
 import type { ReactNode } from "react";
@@ -19,7 +18,7 @@ export function AppShell({ children, signOutAction }: AppShellProps) {
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
-      <CelestialEnvironment />
+      {/* Atmosphere is provided globally by the Living Sky (root layout). */}
       <header className="mx-auto flex w-full max-w-4xl flex-wrap items-center gap-4 px-4 py-4">
         <Link href="/arrival" className="inline-flex items-center gap-2 rounded-full">
           <OpenHorizon size={32} label="Saelis home" />

@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
 
+import type { LightSkyTone } from "@/lib/sky/types";
+
 export type LightState =
   | "resting"
   | "welcoming"
@@ -12,6 +14,12 @@ export type LightState =
 
 export interface TheLightProps {
   state?: LightState;
+  /**
+   * Optional sky-derived visual tone (see the Living Sky). Modifies only the
+   * glow palette — the emotional state remains primary and time of day never
+   * changes The Light's behavior or conversational meaning.
+   */
+  skyTone?: LightSkyTone;
   /** Pixel diameter. */
   size?: number;
   /** Force animation off regardless of OS setting (OS reduced-motion always wins too). */
@@ -27,6 +35,7 @@ export interface TheLightProps {
  */
 export function TheLight({
   state = "resting",
+  skyTone,
   size = 96,
   reducedMotion = false,
   ariaLabel,
@@ -36,10 +45,17 @@ export function TheLight({
     <span
       data-testid="the-light"
       data-state={state}
+      data-sky-tone={skyTone}
       role={ariaLabel ? "status" : undefined}
       aria-label={ariaLabel}
       aria-hidden={ariaLabel ? undefined : true}
-      className={cn("the-light", `the-light--${state}`, reducedMotion && "motion-off", className)}
+      className={cn(
+        "the-light",
+        `the-light--${state}`,
+        skyTone && skyTone !== "pearl" && `the-light--tone-${skyTone}`,
+        reducedMotion && "motion-off",
+        className,
+      )}
       style={{ width: size, height: size }}
     />
   );

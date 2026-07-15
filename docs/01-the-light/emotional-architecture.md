@@ -7,8 +7,10 @@ what is only imagined.
 ## The world
 
 **The Sky** is the atmosphere everything lives in: the gradient, the clouds, the horizon glow.
-Today it is a calm constant. _(Future: the Sky adapts gently to season and time of day — never to
-surveilled mood.)_
+As of the Living Sky milestone it changes quietly with local time of day — eight phases from
+pre-dawn to night, with deterministic stars, a soft sun and moon, and a rare aurora — never with
+surveilled mood, location, or weather. **[Implemented — see docs/02-product/living-sky.md]**
+_(Future: seasonal adaptation, still never emotional profiling.)_
 
 **The Light** is Saelis's presence made visible. It rests, welcomes, listens, receives, reflects,
 guides, celebrates, and is still. It is the emotional state of the companionship, honest about
@@ -29,7 +31,7 @@ backlog. **[Implemented]**
 
 ## Future concepts (not implemented; do not build in this sprint)
 
-- **The Sky as adaptive atmosphere** — seasonal and diurnal shifts in the celestial environment.
+- **The Sky as seasonal atmosphere** — seasonal shifts layered onto the implemented diurnal sky.
 - **Constellations** — approved memories arranged as stars the user can see and touch (the visible
   form of the Memory Charter's Constellation class).
 - **Seasons** — long-arc reflection: what this winter was like, what spring changed.

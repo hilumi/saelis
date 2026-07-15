@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { OpenHorizon } from "@/components/brand/open-horizon";
 import { SaelisWordmark } from "@/components/brand/saelis-wordmark";
-import { CelestialEnvironment } from "@/components/celestial/celestial-environment";
 
 import type { ReactNode } from "react";
 
@@ -12,7 +11,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
-      <CelestialEnvironment />
+
       <header className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-5">
         <Link href="/" className="inline-flex items-center gap-2 rounded-full">
           <OpenHorizon size={32} label="Saelis home" />

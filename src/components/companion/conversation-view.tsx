@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { TheLight, type LightState } from "@/components/brand/the-light";
 import { ConversationComposer } from "@/components/companion/conversation-composer";
 import { ConversationTurn } from "@/components/companion/conversation-turn";
+import { useSky } from "@/components/sky/use-sky";
 import { Button } from "@/components/ui/button";
 import { InlineNotice } from "@/components/ui/inline-notice";
 import { newClientId } from "@/lib/ids";
@@ -84,6 +85,7 @@ export function ConversationView({ approveMemoryAction }: ConversationViewProps)
   const [pendingMemory, setPendingMemory] = useState<PendingMemory | null>(null);
   const [memoryNotice, setMemoryNotice] = useState<string | null>(null);
   const [lightState, setLightState] = useState<LightState>("resting");
+  const { state: sky } = useSky();
   const abortRef = useRef<AbortController | null>(null);
 
   function updateTurn(id: string, update: (turn: DisplayTurn) => DisplayTurn) {
@@ -237,7 +239,7 @@ export function ConversationView({ approveMemoryAction }: ConversationViewProps)
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-center">
-        <TheLight state={lightState} size={72} />
+        <TheLight state={lightState} skyTone={sky.lightTone} size={72} />
       </div>
 
       <div aria-live="polite" className="flex flex-col gap-4">

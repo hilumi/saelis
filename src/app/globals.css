@@ -392,3 +392,266 @@ body {
 .the-light.motion-off {
   animation: none !important;
 }
+
+/* ============================================================
+   The Living Sky
+   Time-driven global atmosphere. Decorative only: aria-hidden,
+   pointer-events none, fixed behind all content, no horizontal
+   scroll. Palette moves in tiny per-minute interpolation steps.
+   ============================================================ */
+.living-sky {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    var(--sky-top, var(--sky-blue)) 0%,
+    var(--sky-middle, var(--sky-lilac)) 48%,
+    var(--sky-bottom, var(--sky-cream)) 100%
+  );
+}
+
+.sky-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sky-haze {
+  background: linear-gradient(180deg, transparent 30%, var(--sky-mist, #e7f2f8) 100%);
+  opacity: 0.35;
+}
+
+.sky-mist-layer {
+  background: linear-gradient(180deg, transparent 62%, var(--sky-mist, #e7f2f8) 100%);
+  opacity: 0.3;
+}
+
+.sky-horizon-glow {
+  position: absolute;
+  left: 50%;
+  bottom: -14vh;
+  width: 140vw;
+  height: 36vh;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse closest-side,
+    var(--sky-horizon, var(--horizon-gold)) 0%,
+    transparent 75%
+  );
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Volumetric clouds — soft radial bodies, no hard outlines. */
+.sky-cloud {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  will-change: transform;
+  background: radial-gradient(closest-side, var(--sky-cloud-light, #ffffff), transparent 70%);
+}
+.sky-cloud--far {
+  filter: blur(46px);
+  opacity: 0.55;
+  animation: cloud-drift 150s linear infinite alternate;
+}
+.sky-cloud--mid {
+  filter: blur(30px);
+  opacity: 0.6;
+  background: radial-gradient(
+    closest-side,
+    var(--sky-cloud-light, #ffffff) 0%,
+    color-mix(in srgb, var(--sky-cloud-shadow, #c4d8ec) 55%, transparent) 58%,
+    transparent 72%
+  );
+  animation: cloud-drift 110s linear infinite alternate-reverse;
+}
+
+/* Sun: diffused, mist-veiled, never a hard disc. */
+.sky-sun {
+  position: absolute;
+  width: 24vmin;
+  height: 24vmin;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    var(--sky-glow, var(--sky-cream)) 0%,
+    color-mix(in srgb, var(--sky-glow, var(--sky-cream)) 45%, transparent) 45%,
+    transparent 72%
+  );
+  filter: blur(6px);
+  opacity: 0.85;
+  animation: light-breathe 18s ease-in-out infinite;
+}
+
+/* Moon: quiet pearl disc, softly misted. */
+.sky-moon {
+  position: absolute;
+  right: 14%;
+  top: 16%;
+  width: 9vmin;
+  height: 9vmin;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 42% 40%,
+    #ffffff 0%,
+    var(--sky-glow, #edeff8) 55%,
+    color-mix(in srgb, var(--sky-glow, #edeff8) 30%, transparent) 100%
+  );
+  box-shadow: 0 0 34px 10px color-mix(in srgb, var(--sky-glow, #edeff8) 40%, transparent);
+  filter: blur(1px);
+  opacity: 0.9;
+}
+
+/* Stars: seeded, slow-breathing points. No rapid blinking. */
+.sky-star {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: var(--sky-star, #ffffff);
+  opacity: var(--star-opacity, 0.6);
+  animation: star-breathe 9s ease-in-out infinite;
+}
+@keyframes star-breathe {
+  0%,
+  100% {
+    opacity: var(--star-opacity, 0.6);
+  }
+  50% {
+    opacity: calc(var(--star-opacity, 0.6) * 0.55);
+  }
+}
+
+/* Aurora: rare, muted, extremely slow. Never neon. */
+.sky-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.38;
+}
+.sky-aurora__band {
+  position: absolute;
+  left: -20%;
+  width: 140%;
+  height: 26vh;
+  border-radius: 999px;
+  filter: blur(48px);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(170, 154, 212, 0.34) 25%,
+    rgba(205, 230, 222, 0.4) 55%,
+    rgba(151, 185, 220, 0.27) 80%,
+    transparent
+  );
+  animation: aurora-drift 100s ease-in-out infinite alternate;
+}
+.sky-aurora__band--high {
+  top: 8%;
+}
+.sky-aurora__band--low {
+  top: 26%;
+  animation-duration: 130s;
+  animation-direction: alternate-reverse;
+}
+@keyframes aurora-drift {
+  from {
+    transform: translate3d(-4%, 0, 0);
+  }
+  to {
+    transform: translate3d(4%, 1vh, 0);
+  }
+}
+
+/* Glass surfaces borrow the phase tint (fallback preserves the original). */
+.glass-surface {
+  background: var(--sky-glass, color-mix(in srgb, var(--cloud-white) 72%, transparent));
+}
+
+/* The Light — sky tones. Visual palette only; never behavioral. */
+.the-light--tone-silver {
+  box-shadow:
+    0 0 32px 6px rgba(201, 205, 224, 0.45),
+    0 0 80px 18px rgba(232, 233, 242, 0.4);
+}
+.the-light--tone-warm-pearl {
+  box-shadow:
+    0 0 32px 6px rgba(247, 233, 201, 0.5),
+    0 0 80px 18px rgba(255, 248, 232, 0.45);
+}
+.the-light--tone-golden {
+  box-shadow:
+    0 0 34px 7px rgba(233, 205, 143, 0.5),
+    0 0 84px 20px rgba(240, 217, 166, 0.4);
+}
+.the-light--tone-blush {
+  box-shadow:
+    0 0 34px 7px rgba(220, 175, 192, 0.45),
+    0 0 84px 20px rgba(233, 196, 194, 0.38);
+}
+.the-light--tone-moonlit {
+  box-shadow:
+    0 0 34px 7px rgba(170, 154, 212, 0.42),
+    0 0 84px 20px rgba(237, 239, 248, 0.4);
+}
+.the-light--tone-aurora {
+  box-shadow:
+    0 0 34px 7px rgba(205, 230, 222, 0.5),
+    0 0 84px 20px rgba(170, 154, 212, 0.32);
+}
+
+/* Mobile simplification (~480px): fewer layers, softer blur, capped stars. */
+@media (max-width: 480px) {
+  .sky-cloud--far {
+    display: none;
+  }
+  .sky-cloud {
+    filter: blur(24px);
+  }
+  .sky-star:nth-child(n + 37) {
+    display: none;
+  }
+  .sky-aurora {
+    opacity: 0.28;
+  }
+}
+
+/* Reduced motion: a still, fully colored atmosphere. */
+@media (prefers-reduced-motion: reduce) {
+  .sky-cloud,
+  .sky-star,
+  .sky-sun,
+  .sky-aurora__band {
+    animation: none !important;
+  }
+}
+.sky-reduced-motion .sky-cloud,
+.sky-reduced-motion .sky-star,
+.sky-reduced-motion .sky-sun,
+.sky-reduced-motion .sky-aurora__band {
+  animation: none !important;
+}
+
+/* High contrast: quieter atmosphere, stronger surfaces, solid glass. */
+.sky-high-contrast .sky-cloud,
+.sky-high-contrast .sky-haze,
+.sky-high-contrast .sky-mist-layer,
+.sky-high-contrast .sky-aurora {
+  opacity: 0.18;
+}
+@media (prefers-contrast: more) {
+  .glass-surface {
+    background: var(--cloud-white);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: var(--text-secondary);
+  }
+}

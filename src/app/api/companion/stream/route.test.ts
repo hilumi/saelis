@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockGetUser, mockFrom } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
@@ -91,6 +91,18 @@ function privacyRow(
   };
 }
 
+// TEST ISOLATION: pin the deterministic mock provider regardless of what the
+// developer's `.env.local` or shell configures for the running app.
+const ORIGINAL_COMPANION_PROVIDER = process.env.COMPANION_PROVIDER;
+
+afterAll(() => {
+  if (ORIGINAL_COMPANION_PROVIDER === undefined) {
+    delete process.env.COMPANION_PROVIDER;
+  } else {
+    process.env.COMPANION_PROVIDER = ORIGINAL_COMPANION_PROVIDER;
+  }
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getPrivacySettings).mockResolvedValue(null); // defaults: history + memory on
@@ -98,7 +110,7 @@ beforeEach(() => {
   resetIdempotencyForTests();
   process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost:54321";
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "test-publishable-key";
-  delete process.env.COMPANION_PROVIDER; // default: mock
+  process.env.COMPANION_PROVIDER = "mock";
   mockGetUser.mockResolvedValue({ data: { user: USER } });
 });
 
