@@ -44,6 +44,16 @@ import type { Database } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
 
+// The route streams live model output and can legitimately run well past
+// Vercel's default function duration (the production timeout this fixes).
+// 60s comfortably covers the provider timeout (30s) plus one bounded retry.
+export const maxDuration = 60;
+
+// Explicitly pin the Node.js runtime (already the effective default): the
+// route relies on Node APIs and must never drift to the Edge runtime, whose
+// duration and streaming semantics differ.
+export const runtime = "nodejs";
+
 const CALM_ERROR = "Saelis had trouble responding just now. Nothing you wrote was lost.";
 
 /** Friendly, deterministic adaptation-notice summaries per preference key. */

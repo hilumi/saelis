@@ -155,6 +155,9 @@ export function ConversationView({ approveMemoryAction, feedbackAction }: Conver
     let completed = false;
 
     try {
+      // Deliberately NO client-side timeout: the server owns time limits
+      // (route maxDuration 60s, provider timeout beneath it). The only abort
+      // signal here is the user's explicit Stop.
       const response = await fetch("/api/companion/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
