@@ -22,6 +22,9 @@ export const COMPANION_RESPONSE_JSON_SCHEMA = {
     "suggestedStep",
     "proposedMemory",
     "safety",
+    "reflection",
+    "adaptationNotice",
+    "insightCandidate",
   ],
   properties: {
     supportMode: { type: "string", enum: [...SUPPORT_MODES] },
@@ -66,6 +69,51 @@ export const COMPANION_RESPONSE_JSON_SCHEMA = {
         level: { type: "string", enum: ["none", "support", "urgent"] },
         message: { type: ["string", "null"] },
       },
+    },
+    reflection: {
+      anyOf: [
+        {
+          type: "object",
+          additionalProperties: false,
+          required: ["facts", "interpretations", "unknowns", "alternativePerspectives"],
+          properties: {
+            facts: { type: "array", items: { type: "string" } },
+            interpretations: { type: "array", items: { type: "string" } },
+            unknowns: { type: "array", items: { type: "string" } },
+            alternativePerspectives: { type: "array", items: { type: "string" } },
+          },
+        },
+        { type: "null" },
+      ],
+    },
+    adaptationNotice: {
+      anyOf: [
+        {
+          type: "object",
+          additionalProperties: false,
+          required: ["summary", "preferenceKey"],
+          properties: {
+            summary: { type: "string" },
+            preferenceKey: { type: "string" },
+          },
+        },
+        { type: "null" },
+      ],
+    },
+    insightCandidate: {
+      anyOf: [
+        {
+          type: "object",
+          additionalProperties: false,
+          required: ["theme", "observation", "uncertaintyStatement"],
+          properties: {
+            theme: { type: "string" },
+            observation: { type: "string" },
+            uncertaintyStatement: { type: "string" },
+          },
+        },
+        { type: "null" },
+      ],
     },
   },
 } as const;

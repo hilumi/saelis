@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/conversation", label: "Talk" },
   { href: "/horizon", label: "Horizon" },
   { href: "/constellations", label: "Constellations" },
+  { href: "/insights", label: "Noticing" },
   { href: "/arrival", label: "Arrival" },
   { href: "/stay-here", label: "Stay Here" },
   { href: "/stillness", label: "Stillness" },

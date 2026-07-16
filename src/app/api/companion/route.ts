@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { companionResponseSchema, type CompanionResponse } from "@/lib/ai/companion-contract";
+import { enforcePlanConstraints } from "@/lib/ai/plan-enforcement";
 import { getCompanionProvider } from "@/lib/ai/provider";
 import { URGENT_RESPONSE_MESSAGE } from "@/lib/ai/safety";
+import { createCoreAssessment, enrichLightPlan } from "@/lib/core";
 import { toCompanionPreferences } from "@/lib/companion-defaults";
 import { COMPANION_MAX_BODY_BYTES } from "@/lib/constants";
 import { listRecentArrivals } from "@/lib/db/queries/arrivals";
@@ -158,6 +160,22 @@ export async function POST(request: Request) {
       throw error;
     }
 
+    // Saelis Core enrichment. This legacy endpoint runs with current-context
+    // adaptation only (no stored preferences are read or written here); the
+    // streaming endpoint is the full production path.
+    plan = enrichLightPlan(
+      plan,
+      createCoreAssessment({
+        message: lightContext.message,
+        recentTurns: lightContext.recentTurns,
+        understanding: plan.understanding,
+        humorSetting: lightContext.companionProfile.humorLevel,
+        toneSetting: lightContext.companionProfile.tonePreference,
+        adaptiveLearningEnabled: false,
+        adaptivePreferences: [],
+      }),
+    );
+
     let response: CompanionResponse;
 
     if (plan.understanding.safetyLevel === "urgent") {
@@ -194,14 +212,9 @@ export async function POST(request: Request) {
         console.error("companion provider returned an invalid response");
         return NextResponse.json({ error: CALM_ERROR }, { status: 502 });
       }
-      response = validated.data;
-
-      // Closing-line policy: closings are earned, not appended to everything.
-      if (plan.closingPolicy.context === "no-closing") {
-        response = { ...response, closingLine: null };
-      } else if (!response.closingLine && plan.closingPolicy.line) {
-        response = { ...response, closingLine: plan.closingPolicy.line };
-      }
+      // Deterministic post-validation enforcement (closing policy, Saelis
+      // Core content rules — humor, prohibited claims, shared language).
+      response = enforcePlanConstraints(validated.data, plan);
     }
 
     if (saveHistory) {

@@ -12,9 +12,11 @@ import {
 import { enforcePlanConstraints } from "@/lib/ai/plan-enforcement";
 import {
   classifyProviderError,
+  ProviderIncompleteError,
   ProviderNotConfiguredError,
   ProviderValidationError,
 } from "@/lib/ai/provider-errors";
+import { logValidationDiagnostics, summarizeZodIssues } from "@/lib/ai/validation-diagnostics";
 
 import type {
   CompanionProvider,
@@ -64,14 +66,119 @@ interface ResponsesStreamEvent {
   delta?: string;
   response?: {
     id?: string;
+    status?: string;
+    incomplete_details?: { reason?: string };
     usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number };
   };
 }
 
 interface ResponsesResult {
   id?: string;
+  status?: string;
+  incomplete_details?: { reason?: string };
   output_text?: string;
   usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number };
+}
+
+// ---------------------------------------------------------------------------
+// Structured-output normalization
+// ---------------------------------------------------------------------------
+
+/** Contract size caps for the v0.7 optional objects (mirrors the Zod schema). */
+const EXTRA_FIELD_CAPS = {
+  reflectionEntry: 300,
+  reflectionItems: 8,
+  noticeSummary: 300,
+  noticeKey: 60,
+  insightTheme: 40,
+  insightObservation: 500,
+  insightUncertainty: 300,
+} as const;
+
+function clampStringList(value: unknown, maxItems: number, maxLength: number): unknown {
+  if (!Array.isArray(value)) return value;
+  return value
+    .slice(0, maxItems)
+    .map((entry) => (typeof entry === "string" ? entry.slice(0, maxLength) : entry));
+}
+
+/**
+ * Deterministically clamp the v0.7 optional objects to their contract caps
+ * BEFORE validation. OpenAI strict schemas cannot express string/array length
+ * bounds, so a well-formed live response can exceed them; truncating to the
+ * documented caps is the correct handling (the caps still hold), whereas
+ * rejecting the entire response over an over-long reflection entry is not.
+ * Nothing else in the payload is touched, and validation itself is unchanged.
+ */
+export function clampStructuredExtras(value: unknown): unknown {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return value;
+  const record = { ...(value as Record<string, unknown>) };
+
+  const reflection = record.reflection;
+  if (typeof reflection === "object" && reflection !== null && !Array.isArray(reflection)) {
+    const source = reflection as Record<string, unknown>;
+    record.reflection = {
+      ...source,
+      facts: clampStringList(
+        source.facts,
+        EXTRA_FIELD_CAPS.reflectionItems,
+        EXTRA_FIELD_CAPS.reflectionEntry,
+      ),
+      interpretations: clampStringList(
+        source.interpretations,
+        EXTRA_FIELD_CAPS.reflectionItems,
+        EXTRA_FIELD_CAPS.reflectionEntry,
+      ),
+      unknowns: clampStringList(
+        source.unknowns,
+        EXTRA_FIELD_CAPS.reflectionItems,
+        EXTRA_FIELD_CAPS.reflectionEntry,
+      ),
+      alternativePerspectives: clampStringList(
+        source.alternativePerspectives,
+        EXTRA_FIELD_CAPS.reflectionItems,
+        EXTRA_FIELD_CAPS.reflectionEntry,
+      ),
+    };
+  }
+
+  const notice = record.adaptationNotice;
+  if (typeof notice === "object" && notice !== null && !Array.isArray(notice)) {
+    const source = notice as Record<string, unknown>;
+    record.adaptationNotice = {
+      ...source,
+      summary:
+        typeof source.summary === "string"
+          ? source.summary.slice(0, EXTRA_FIELD_CAPS.noticeSummary)
+          : source.summary,
+      preferenceKey:
+        typeof source.preferenceKey === "string"
+          ? source.preferenceKey.slice(0, EXTRA_FIELD_CAPS.noticeKey)
+          : source.preferenceKey,
+    };
+  }
+
+  const insight = record.insightCandidate;
+  if (typeof insight === "object" && insight !== null && !Array.isArray(insight)) {
+    const source = insight as Record<string, unknown>;
+    record.insightCandidate = {
+      ...source,
+      theme:
+        typeof source.theme === "string"
+          ? source.theme.slice(0, EXTRA_FIELD_CAPS.insightTheme)
+          : source.theme,
+      observation:
+        typeof source.observation === "string"
+          ? source.observation.slice(0, EXTRA_FIELD_CAPS.insightObservation)
+          : source.observation,
+      uncertaintyStatement:
+        typeof source.uncertaintyStatement === "string"
+          ? source.uncertaintyStatement.slice(0, EXTRA_FIELD_CAPS.insightUncertainty)
+          : source.uncertaintyStatement,
+    };
+  }
+
+  return record;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -202,6 +309,8 @@ export class OpenAICompanionProvider implements CompanionProvider {
     let rawJson = "";
     let responseId: string | undefined;
     let usage: { input_tokens?: number; output_tokens?: number; total_tokens?: number } | undefined;
+    let responseStatus: string | undefined;
+    let incompleteReason: string | undefined;
 
     if (options.stream) {
       const streamResponse = (await client.responses.create(
@@ -217,7 +326,15 @@ export class OpenAICompanionProvider implements CompanionProvider {
           if (visible) options.onDelta?.(visible);
         } else if (event.type === "response.completed" && event.response) {
           responseId = event.response.id;
+          responseStatus = event.response.status ?? "completed";
           usage = event.response.usage;
+        } else if (event.type === "response.incomplete") {
+          // The model stopped early (e.g. max_output_tokens). This is NOT a
+          // validation failure and never an authentication failure.
+          responseId = event.response?.id;
+          responseStatus = "incomplete";
+          incompleteReason = event.response?.incomplete_details?.reason ?? "unknown";
+          usage = event.response?.usage;
         } else if (event.type === "response.failed" || event.type === "error") {
           throw new ProviderValidationError();
         }
@@ -226,22 +343,64 @@ export class OpenAICompanionProvider implements CompanionProvider {
       const result = (await client.responses.create(request, { signal })) as ResponsesResult;
       rawJson = result.output_text ?? "";
       responseId = result.id;
+      responseStatus = result.status;
       usage = result.usage;
+      if (result.status === "incomplete") {
+        incompleteReason = result.incomplete_details?.reason ?? "unknown";
+      }
     }
 
-    // Structured output is requested, never trusted: parse, Zod-validate, then
+    if (incompleteReason !== undefined) {
+      logValidationDiagnostics({
+        stage: "parse",
+        jsonParseFailed: false,
+        issues: [],
+        responseStatus,
+        incompleteReason,
+      });
+      throw new ProviderIncompleteError(incompleteReason);
+    }
+
+    // Structured output is requested, never trusted: parse, clamp the v0.7
+    // optional objects to their contract caps, Zod-validate, then
     // deterministically enforce the plan.
     let parsedJson: unknown;
     try {
       parsedJson = JSON.parse(rawJson);
     } catch {
+      logValidationDiagnostics({
+        stage: "parse",
+        jsonParseFailed: true,
+        issues: [],
+        responseStatus,
+        incompleteReason,
+      });
       throw new ProviderValidationError();
     }
-    const validated = companionResponseSchema.safeParse(parsedJson);
+    const validated = companionResponseSchema.safeParse(clampStructuredExtras(parsedJson));
     if (!validated.success) {
+      logValidationDiagnostics({
+        stage: "schema",
+        jsonParseFailed: false,
+        issues: summarizeZodIssues(validated.error),
+        responseStatus,
+      });
       throw new ProviderValidationError();
     }
     const response = enforcePlanConstraints(validated.data, plan);
+
+    // The deterministic enforcement layer must itself yield a contract-valid
+    // object; prove it before anything is shown or persisted.
+    const revalidated = companionResponseSchema.safeParse(response);
+    if (!revalidated.success) {
+      logValidationDiagnostics({
+        stage: "post-enforcement",
+        jsonParseFailed: false,
+        issues: summarizeZodIssues(revalidated.error),
+        responseStatus,
+      });
+      throw new ProviderValidationError();
+    }
 
     return {
       response,

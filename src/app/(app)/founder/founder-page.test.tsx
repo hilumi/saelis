@@ -11,6 +11,13 @@ vi.mock("@/lib/db/queries/stewardship", () => ({
   getStewardshipMemoryCounts: vi.fn(async () => [
     { kind: "constellation", status: "active", occurrences: 7 },
   ]),
+  getFeedbackCategoryCounts: vi.fn(async () => [{ feedback_category: "too-long", occurrences: 2 }]),
+}));
+vi.mock("@/lib/db/queries/adaptation", () => ({
+  getAdaptationAggregateCounts: vi.fn(async () => [
+    { record_kind: "adaptive_preference", status: "active", occurrences: 3 },
+    { record_kind: "pattern_hypothesis", status: "reviewable", occurrences: 2 },
+  ]),
 }));
 
 import FounderPage from "@/app/(app)/founder/page";

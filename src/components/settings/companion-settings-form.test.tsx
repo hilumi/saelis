@@ -22,7 +22,9 @@ describe("CompanionSettingsForm", () => {
     expect(screen.getByLabelText("Faith reflection")).toHaveValue("ask");
     expect(screen.getByLabelText("Planning style")).toHaveValue("one-step");
     expect(screen.getByLabelText("Encouragement")).toHaveValue("warm");
-    expect(screen.getByRole("switch", { name: "Adaptive learning" })).toBeChecked();
+    expect(
+      screen.getByRole("switch", { name: "Allow Saelis to adapt how it communicates with me" }),
+    ).toBeChecked();
   });
 
   it("submits updated values and shows success feedback", async () => {
@@ -38,7 +40,9 @@ describe("CompanionSettingsForm", () => {
 
     await user.type(screen.getByLabelText("What should Saelis call you?"), "Sophie");
     await user.selectOptions(screen.getByLabelText("Tone"), "gentle");
-    await user.click(screen.getByRole("switch", { name: "Adaptive learning" }));
+    await user.click(
+      screen.getByRole("switch", { name: "Allow Saelis to adapt how it communicates with me" }),
+    );
     await user.click(screen.getByRole("button", { name: "Save preferences" }));
 
     expect(action).toHaveBeenCalledWith({

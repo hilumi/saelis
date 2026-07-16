@@ -28,6 +28,8 @@ export type ProfileRow = {
   id: string;
   preferred_name: string | null;
   timezone: string | null;
+  /** Set once when onboarding completes (or is skipped); never shown again. */
+  onboarded_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -122,6 +124,49 @@ export type UserPrivacySettingsRow = {
 export type AppRoleRow = {
   user_id: string;
   role: "founder" | "admin" | "support";
+  created_at: string;
+};
+
+export type AdaptivePreferenceRow = {
+  id: string;
+  user_id: string;
+  key: string;
+  value: Record<string, string | number | boolean>;
+  confidence: number;
+  evidence_count: number;
+  status: "observed" | "active" | "paused" | "reset" | "expired";
+  first_observed_at: string;
+  last_observed_at: string;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PatternHypothesisRow = {
+  id: string;
+  user_id: string;
+  theme: string;
+  observation: string;
+  uncertainty_statement: string;
+  confidence: number;
+  evidence_count: number;
+  cross_domain_count: number;
+  status: "working" | "reviewable" | "accepted" | "rejected" | "expired";
+  first_observed_at: string;
+  last_observed_at: string;
+  surfaced_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PatternEvidenceRow = {
+  id: string;
+  hypothesis_id: string;
+  user_id: string;
+  source_type: string;
+  source_id: string | null;
+  occurred_at: string;
+  evidence_summary: string;
   created_at: string;
 };
 

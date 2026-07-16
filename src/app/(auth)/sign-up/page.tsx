@@ -113,6 +113,21 @@ export default function SignUpPage() {
             className="glass-surface min-h-11 rounded-2xl px-4 py-2 text-ink"
           />
         </div>
+        <p className="text-xs text-ink-muted">
+          By creating an account you agree to the{" "}
+          <Link href="/terms" className="underline underline-offset-4 hover:text-ink">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
+            Privacy
+          </Link>{" "}
+          drafts, and understand that Saelis is AI —{" "}
+          <Link href="/ai-disclosure" className="underline underline-offset-4 hover:text-ink">
+            it can misunderstand
+          </Link>{" "}
+          and is not a crisis service.
+        </p>
         <Button type="submit" disabled={pending || !email || !password}>
           {pending ? "Creating your place…" : "Create account"}
         </Button>

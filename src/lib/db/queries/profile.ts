@@ -31,6 +31,16 @@ export async function updateProfile(
   if (error) throw new Error("Could not save your profile.");
 }
 
+/** Mark onboarding complete (idempotent — the timestamp is set once). */
+export async function markOnboarded(supabase: Client, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ onboarded_at: new Date().toISOString() })
+    .eq("id", userId)
+    .is("onboarded_at", null);
+  if (error) throw new Error("Could not finish setup.");
+}
+
 export async function getCompanionProfile(
   supabase: Client,
   userId: string,

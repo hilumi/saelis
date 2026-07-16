@@ -10,6 +10,7 @@ export type ProviderErrorCode =
   | "provider-timeout"
   | "provider-unavailable"
   | "provider-validation"
+  | "provider-incomplete"
   | "provider-aborted"
   | "provider-unknown";
 
@@ -83,6 +84,24 @@ export class ProviderValidationError extends ProviderError {
       "provider-validation",
       "I couldn't meet you clearly in that moment. Please try once more.",
     );
+  }
+}
+
+/**
+ * The model stopped before finishing the structured response (for example,
+ * the output-token budget ran out). Distinct from validation and from
+ * authentication: the JSON isn't wrong, it's unfinished. Retryable.
+ */
+export class ProviderIncompleteError extends ProviderError {
+  /** Content-free reason from the provider, e.g. "max_output_tokens". */
+  readonly reason: string;
+
+  constructor(reason = "unknown") {
+    super("provider-incomplete", "That thought didn't have room to finish. Please try once more.", {
+      retryable: true,
+      message: `incomplete: ${reason}`,
+    });
+    this.reason = reason;
   }
 }
 

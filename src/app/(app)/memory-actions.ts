@@ -184,6 +184,16 @@ export async function recordResponseFeedback(input: unknown): Promise<ActionResu
       event_type: parsed.data.helpful ? "response_feedback_positive" : "response_feedback_negative",
       feedback_category: parsed.data.helpful ? null : parsed.data.category,
     });
+    // Aggregate-only signals for the humor and challenge calibrations (v0.7
+    // stewardship categories). Still content-free — a category, never text.
+    if (!parsed.data.helpful && parsed.data.category === "humor-did-not-land") {
+      await recordStewardshipEvent(supabase, user.id, { event_type: "humor_feedback_negative" });
+    }
+    if (!parsed.data.helpful && parsed.data.category === "too-direct") {
+      await recordStewardshipEvent(supabase, user.id, {
+        event_type: "challenge_feedback_negative",
+      });
+    }
     return { ok: true };
   } catch {
     return { ok: false, error: CALM_ERROR };

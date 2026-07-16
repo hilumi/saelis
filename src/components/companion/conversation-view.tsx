@@ -32,6 +32,8 @@ interface PendingMemory {
 interface FailureState {
   message: string;
   lastMessage: string;
+  /** True when the session expired — offer sign-in instead of retry. */
+  signInNeeded?: boolean;
 }
 
 export interface ConversationViewProps {
@@ -77,6 +79,10 @@ export function drainSseBuffer(buffer: string): { events: StreamEvent[]; rest: s
 }
 
 const CALM_ERROR = "Saelis had trouble responding. Nothing you wrote was lost.";
+const OFFLINE_ERROR =
+  "You look offline right now. Your words are safe here — try again when you're connected.";
+const SESSION_ERROR =
+  "Your session ended while you were away. Please sign in again — your quiet place is still here.";
 
 /**
  * Streaming conversation. Text arrives progressively (whole deltas — never a
@@ -126,6 +132,13 @@ export function ConversationView({ approveMemoryAction, feedbackAction }: Conver
 
   async function handleSend(message: string): Promise<boolean> {
     if (busy) return false;
+
+    // Offline pre-check: keep the draft, say so calmly, send nothing.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setFailure({ message: OFFLINE_ERROR, lastMessage: message });
+      return false;
+    }
+
     setFailure(null);
     setBusy(true);
     setLightState("listening");
@@ -150,12 +163,19 @@ export function ConversationView({ approveMemoryAction, feedbackAction }: Conver
       });
 
       if (!response.ok || !response.body) {
+        // Expired session: a distinct, calm path back to sign-in.
+        if (response.status === 401) {
+          removeTurn(userTurnId);
+          setFailure({ message: SESSION_ERROR, lastMessage: message, signInNeeded: true });
+          setLightState("resting");
+          return false;
+        }
         let publicError = CALM_ERROR;
         try {
           const payload = (await response.json()) as { error?: string };
           if (payload.error) publicError = payload.error;
         } catch {
-          // keep the calm default
+          // keep the calm default — raw provider/database errors never surface
         }
         removeTurn(userTurnId);
         setFailure({ message: publicError, lastMessage: message });
@@ -249,7 +269,11 @@ export function ConversationView({ approveMemoryAction, feedbackAction }: Conver
       }
       removeTurn(assistantTurnId);
       removeTurn(userTurnId);
-      setFailure({ message: CALM_ERROR, lastMessage: message });
+      // A fetch that never reached the server is usually connectivity.
+      const wentOffline =
+        (typeof navigator !== "undefined" && navigator.onLine === false) ||
+        error instanceof TypeError;
+      setFailure({ message: wentOffline ? OFFLINE_ERROR : CALM_ERROR, lastMessage: message });
       setLightState("resting");
       return false;
     } finally {
@@ -425,12 +449,12 @@ export function ConversationView({ approveMemoryAction, feedbackAction }: Conver
           ) : (
             <>
               {[
-                ["too-much-advice", "Too much advice"],
+                ["too-soft", "Too soft"],
+                ["too-direct", "Too direct"],
                 ["too-long", "Too long"],
                 ["too-generic", "Too generic"],
                 ["missed-need", "Missed what I needed"],
-                ["tone", "Tone felt wrong"],
-                ["other", "Other"],
+                ["humor-did-not-land", "Humor didn't land"],
               ].map(([value, label]) => (
                 <Button
                   key={value}
@@ -440,6 +464,15 @@ export function ConversationView({ approveMemoryAction, feedbackAction }: Conver
                   {label}
                 </Button>
               ))}
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setFeedbackState("done");
+                  void feedbackAction({ helpful: false, category: null });
+                }}
+              >
+                Skip the details
+              </Button>
             </>
           )}
         </div>
@@ -449,13 +482,22 @@ export function ConversationView({ approveMemoryAction, feedbackAction }: Conver
         <div className="flex flex-col gap-2">
           <InlineNotice tone="error">{failure.message}</InlineNotice>
           <div>
-            <Button
-              variant="soft"
-              disabled={busy}
-              onClick={() => void handleSend(failure.lastMessage)}
-            >
-              Try again
-            </Button>
+            {failure.signInNeeded ? (
+              <a
+                href="/sign-in"
+                className="inline-flex min-h-11 items-center rounded-full bg-cloud-lilac px-6 text-base font-medium text-ink hover:bg-sky-lilac"
+              >
+                Sign in again
+              </a>
+            ) : (
+              <Button
+                variant="soft"
+                disabled={busy}
+                onClick={() => void handleSend(failure.lastMessage)}
+              >
+                Try again
+              </Button>
+            )}
           </div>
         </div>
       ) : null}

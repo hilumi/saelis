@@ -30,6 +30,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#DDEBFA",
+  width: "device-width",
+  initialScale: 1,
+  // Extend the Living Sky under notches/home indicators; safe-area padding is
+  // applied in globals.css.
+  viewportFit: "cover",
+  // Mobile keyboards resize the layout so the conversation composer stays
+  // visible above the keyboard.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -41,4 +41,18 @@ describe("MessageFieldStreamer", () => {
     expect(streamer.push('"safetyNote":"not the field",')).toBe("");
     expect(streamer.push('"message":"Now."')).toBe("Now.");
   });
+
+  it("v0.7 nested fields after message never leak into the visible stream", () => {
+    const streamer = new MessageFieldStreamer();
+    const parts = [
+      '{"supportMode":"clarify","message":"Only this te',
+      'xt is visible.","followUp":null,"reflection":{"facts":["The message says \\"we need to talk\\"."],',
+      '"interpretations":["hidden"],"unknowns":[],"alternativePerspectives":[]},',
+      '"insightCandidate":{"theme":"avoidance","observation":"hidden too","uncertaintyStatement":"maybe"}}',
+    ];
+    let visible = "";
+    for (const part of parts) visible += streamer.push(part);
+    expect(visible).toBe("Only this text is visible.");
+    expect(streamer.finished).toBe(true);
+  });
 });

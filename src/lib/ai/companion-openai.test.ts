@@ -167,6 +167,115 @@ describe("OpenAICompanionProvider", () => {
     expect(result.metadata.latencyMs).toBeGreaterThanOrEqual(0);
   });
 
+  it("classifies an incomplete stream (token cap) as provider-incomplete, not validation", async () => {
+    // Reproduction of the live v0.7 failure: the model runs out of output
+    // tokens mid-JSON; the stream ends with response.incomplete and truncated
+    // JSON. This must NOT be reported as provider-validation (and never as
+    // authentication).
+    mockGetConfig.mockReturnValue(config({ maxRetries: 0 }));
+    mockCreate.mockResolvedValue(
+      (async function* () {
+        yield {
+          type: "response.output_text.delta",
+          delta: '{"supportMode":"witness","message":"I hear you and I want to say more but',
+        };
+        yield {
+          type: "response.incomplete",
+          response: {
+            id: "resp_cut",
+            status: "incomplete",
+            incomplete_details: { reason: "max_output_tokens" },
+            usage: { input_tokens: 100, output_tokens: 900, total_tokens: 1000 },
+          },
+        };
+      })(),
+    );
+    const { input, plan } = makeRequest("Can I show you this text? What does it mean?");
+    await expect(provider.respondStream(input, plan, {})).rejects.toMatchObject({
+      code: "provider-incomplete",
+      retryable: true,
+      reason: "max_output_tokens",
+    });
+  });
+
+  it("classifies an incomplete non-streaming response as provider-incomplete", async () => {
+    mockGetConfig.mockReturnValue(config({ maxRetries: 0 }));
+    mockCreate.mockResolvedValue({
+      id: "r",
+      status: "incomplete",
+      incomplete_details: { reason: "max_output_tokens" },
+      output_text: '{"supportMode":"witness","message":"truncat',
+      usage: {},
+    });
+    const { input, plan } = makeRequest("hello there");
+    await expect(provider.respond(input, plan)).rejects.toMatchObject({
+      code: "provider-incomplete",
+    });
+  });
+
+  it("assembles v0.7 nested fields across awkward chunk boundaries without corruption", async () => {
+    const fullResponse = {
+      supportMode: "clarify",
+      message: 'Let\'s look at it together. The quoted line was "we need to talk".',
+      followUp: null,
+      closingLine: null,
+      suggestedStep: null,
+      proposedMemory: null,
+      safety: { level: "none", message: null },
+      reflection: {
+        facts: ["The message says 'we need to talk'."],
+        interpretations: ["It could be about the relationship."],
+        unknowns: ["The topic is not stated."],
+        alternativePerspectives: ["It might be logistical."],
+      },
+      adaptationNotice: null,
+      insightCandidate: null,
+    };
+    const json = JSON.stringify(fullResponse);
+    // Emit in tiny uneven chunks so escapes and nested objects split anywhere.
+    const chunks: string[] = [];
+    for (let index = 0; index < json.length; index += 7) {
+      chunks.push(json.slice(index, index + 7));
+    }
+    mockCreate.mockResolvedValue(
+      (async function* () {
+        for (const chunk of chunks) {
+          yield { type: "response.output_text.delta", delta: chunk };
+        }
+        yield { type: "response.completed", response: { id: "resp_v7", usage: {} } };
+      })(),
+    );
+    const { input, plan } = makeRequest("Can I show you this text? What does it mean?");
+    const deltas: string[] = [];
+    const result = await provider.respondStream(input, plan, {
+      onDelta: (text) => deltas.push(text),
+    });
+    // Visible stream carries EXACTLY the message text — nothing from the
+    // nested reflection leaks into it, and nothing is truncated.
+    expect(deltas.join("")).toBe(fullResponse.message);
+    expect(result.response.message).toBe(fullResponse.message);
+    // The plain (non-Core) plan strips reflection deterministically; the
+    // assembled JSON itself parsed and validated without corruption.
+    expect(result.response.supportMode).toBe("clarify");
+  });
+
+  it("live strict-mode shape with all v0.7 keys null validates end to end", async () => {
+    mockCreate.mockResolvedValue({
+      id: "r",
+      output_text: JSON.stringify({
+        ...VALID_OUTPUT,
+        reflection: null,
+        adaptationNotice: null,
+        insightCandidate: null,
+      }),
+      usage: {},
+    });
+    const { input, plan } = makeRequest("I just need to vent.");
+    const response = await provider.respond(input, plan);
+    expect(response.message).toBe("I'm taking that in.");
+    expect(response.reflection ?? null).toBeNull();
+  });
+
   it("treats invalid JSON as a provider validation error", async () => {
     mockCreate.mockResolvedValue({ id: "r", output_text: "{not json", usage: {} });
     const { input, plan } = makeRequest("hello there");

@@ -199,8 +199,8 @@ export function CompanionSettingsForm({
       />
 
       <Toggle
-        label="Adaptive learning"
-        description="Let Saelis gently adapt to your preferences over time. Nothing is remembered without your approval."
+        label="Allow Saelis to adapt how it communicates with me"
+        description="Let Saelis gently adapt to your communication preferences over time. Everything it adapts is visible below, and nothing lasting is remembered without your approval."
         checked={preferences.adaptiveLearningEnabled}
         onChange={(value) => set("adaptiveLearningEnabled", value)}
       />

@@ -24,6 +24,14 @@ vi.mock("@/lib/db/queries/arrivals", () => ({
   listRecentArrivals: vi.fn(async () => []),
 }));
 
+vi.mock("@/lib/db/queries/adaptation", () => ({
+  listAdaptivePreferences: vi.fn(async () => []),
+  listPatternHypotheses: vi.fn(async () => []),
+  recordAdaptiveObservation: vi.fn(async () => undefined),
+  recordAdaptationCorrection: vi.fn(async () => undefined),
+  recordPatternEvidence: vi.fn(async () => undefined),
+}));
+
 vi.mock("@/lib/db/queries/conversations", () => ({
   createConversation: vi.fn(async () => ({ id: "11111111-1111-4111-8111-111111111111" })),
   getConversation: vi.fn(async () => null),
@@ -33,8 +41,13 @@ vi.mock("@/lib/db/queries/conversations", () => ({
 
 import { POST } from "@/app/api/companion/stream/route";
 import { companionResponseSchema } from "@/lib/ai/companion-contract";
+import {
+  listAdaptivePreferences,
+  recordAdaptiveObservation,
+  recordPatternEvidence,
+} from "@/lib/db/queries/adaptation";
 import { createConversation, saveTurn } from "@/lib/db/queries/conversations";
-import { getPrivacySettings } from "@/lib/db/queries/profile";
+import { getCompanionProfile, getPrivacySettings } from "@/lib/db/queries/profile";
 import { resetIdempotencyForTests } from "@/lib/idempotency";
 import { resetRateLimiter } from "@/lib/rate-limit";
 
@@ -230,5 +243,83 @@ describe("POST /api/companion/stream", () => {
       if (response.status === 200) await response.text();
     }
     expect(lastStatus).toBe(429);
+  });
+});
+
+describe("POST /api/companion/stream — Saelis Core adaptation (v0.7)", () => {
+  it("records an explicit preference observation and returns a transparency notice", async () => {
+    const events = await readSse(
+      await POST(streamRequest({ message: "Please be more direct with me." })),
+    );
+    const complete = events.find((event) => event.event === "complete");
+    expect(complete).toBeDefined();
+    expect(recordAdaptiveObservation).toHaveBeenCalledWith(
+      expect.anything(),
+      "appreciates-direct-challenge",
+      {},
+      true,
+    );
+    const companion = complete?.data.response as {
+      adaptationNotice: { preferenceKey: string; summary: string } | null;
+    };
+    expect(companion.adaptationNotice?.preferenceKey).toBe("appreciates-direct-challenge");
+  });
+
+  it("records nothing when adaptive learning is disabled", async () => {
+    vi.mocked(getCompanionProfile).mockResolvedValueOnce({
+      user_id: USER.id,
+      tone_preference: "balanced",
+      response_length: "moderate",
+      default_support_preference: "listen-first",
+      humor_level: "light",
+      faith_preference: "ask",
+      planning_style: "one-step",
+      encouragement_style: "warm",
+      adaptive_learning_enabled: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    const events = await readSse(
+      await POST(streamRequest({ message: "Please be more direct with me." })),
+    );
+    expect(events.some((event) => event.event === "complete")).toBe(true);
+    expect(listAdaptivePreferences).not.toHaveBeenCalled();
+    expect(recordAdaptiveObservation).not.toHaveBeenCalled();
+  });
+
+  it("records nothing when companion memory is disabled (privacy alignment)", async () => {
+    vi.mocked(getPrivacySettings).mockResolvedValue(privacyRow({ allow_companion_memory: false }));
+    const events = await readSse(
+      await POST(streamRequest({ message: "Please be more direct with me." })),
+    );
+    expect(events.some((event) => event.event === "complete")).toBe(true);
+    expect(recordAdaptiveObservation).not.toHaveBeenCalled();
+  });
+
+  it("records nothing from a safety-level exchange", async () => {
+    const events = await readSse(
+      await POST(streamRequest({ message: "Be more direct with me. I want to end my life." })),
+    );
+    const complete = events.find((event) => event.event === "complete");
+    expect((complete?.data.response as { safety: { level: string } }).safety.level).toBe("urgent");
+    expect(recordAdaptiveObservation).not.toHaveBeenCalled();
+    expect(recordPatternEvidence).not.toHaveBeenCalled();
+  });
+
+  it("adaptation failures never break the conversation", async () => {
+    vi.mocked(recordAdaptiveObservation).mockRejectedValueOnce(new Error("db down"));
+    const events = await readSse(
+      await POST(streamRequest({ message: "Please be more direct with me." })),
+    );
+    expect(events.some((event) => event.event === "complete")).toBe(true);
+    expect(events.some((event) => event.event === "error")).toBe(false);
+  });
+
+  it("mock provider output passes through deterministic plan enforcement", async () => {
+    const events = await readSse(await POST(streamRequest({ message: "My father died." })));
+    const complete = events.find((event) => event.event === "complete");
+    const companion = complete?.data.response as { message: string };
+    // No humor markers can survive a grief exchange, whatever the provider says.
+    expect(companion.message).not.toMatch(/😂|haha|lol/i);
   });
 });

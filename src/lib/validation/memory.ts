@@ -72,8 +72,17 @@ export const horizonHandoffSchema = z.object({
 
 export const feedbackSchema = z.object({
   helpful: z.boolean(),
+  // v0.8 beta categories. Content-free by design: feedback never carries
+  // conversation text, only one category from this allowlist.
   category: z
-    .enum(["too-much-advice", "too-long", "too-generic", "missed-need", "tone", "other"])
+    .enum([
+      "too-soft",
+      "too-direct",
+      "too-long",
+      "too-generic",
+      "missed-need",
+      "humor-did-not-land",
+    ])
     .nullable()
     .optional()
     .default(null),

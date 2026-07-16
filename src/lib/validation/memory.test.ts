@@ -66,9 +66,23 @@ describe("memory validation", () => {
     ).toBe(false);
   });
 
-  it("feedback accepts categories only from the allowlist", () => {
-    expect(feedbackSchema.safeParse({ helpful: false, category: "too-long" }).success).toBe(true);
+  it("feedback accepts categories only from the v0.8 allowlist", () => {
+    for (const category of [
+      "too-soft",
+      "too-direct",
+      "too-long",
+      "too-generic",
+      "missed-need",
+      "humor-did-not-land",
+    ]) {
+      expect(feedbackSchema.safeParse({ helpful: false, category }).success).toBe(true);
+    }
     expect(feedbackSchema.safeParse({ helpful: false, category: "annoying" }).success).toBe(false);
+    expect(feedbackSchema.safeParse({ helpful: false, category: "too-much-advice" }).success).toBe(
+      false,
+    );
+    // The category is always optional.
+    expect(feedbackSchema.safeParse({ helpful: false, category: null }).success).toBe(true);
     expect(feedbackSchema.parse({ helpful: true }).category).toBeNull();
   });
 });

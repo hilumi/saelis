@@ -58,6 +58,22 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Mobile: no horizontal scroll, ever. Decorative layers may extend past the
+     viewport; they must never widen the page. */
+  overflow-x: clip;
+  /* Respect notches and home indicators (viewport-fit=cover). */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Long user text (URLs, unbroken strings) wraps instead of widening layout. */
+p,
+li,
+dd,
+dt,
+blockquote {
+  overflow-wrap: anywhere;
 }
 
 ::selection {

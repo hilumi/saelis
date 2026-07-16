@@ -22,7 +22,10 @@ export interface OpenAIProviderConfig {
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000;
-const DEFAULT_MAX_OUTPUT_TOKENS = 900; // conservative: a moderate Saelis response
+// v0.7 grew the structured response (reflection, adaptationNotice,
+// insightCandidate are required nullable keys). 900 tokens routinely hit the
+// cap and produced incomplete JSON; this budget leaves honest headroom.
+const DEFAULT_MAX_OUTPUT_TOKENS = 1_600;
 const DEFAULT_MAX_RETRIES = 1;
 
 function readPositiveInt(name: string, fallback: number): number {

@@ -10,8 +10,11 @@
  * src/types/database.ts mirror supabase/migrations exactly; any drift is a bug.
  */
 import type {
+  AdaptivePreferenceRow,
   AppRoleRow,
   ArrivalRow,
+  PatternEvidenceRow,
+  PatternHypothesisRow,
   CompanionMemoryRow,
   CompanionProfileRow,
   ConversationRow,
@@ -30,7 +33,7 @@ type Table<Row, Insert> = {
 };
 
 type ProfileInsert = Pick<ProfileRow, "id"> &
-  Partial<Pick<ProfileRow, "preferred_name" | "timezone">>;
+  Partial<Pick<ProfileRow, "preferred_name" | "timezone" | "onboarded_at">>;
 
 type CompanionProfileInsert = Pick<CompanionProfileRow, "user_id"> &
   Partial<Omit<CompanionProfileRow, "user_id" | "created_at" | "updated_at">>;
@@ -75,6 +78,25 @@ type CompanionMemoryInsert = Pick<
   >;
 
 type AppRoleInsert = Pick<AppRoleRow, "user_id" | "role">;
+
+// Adaptation tables have NO ordinary insert path (security-definer functions
+// only), but the client type still needs an Insert shape.
+type AdaptivePreferenceInsert = Pick<AdaptivePreferenceRow, "user_id" | "key"> &
+  Partial<Omit<AdaptivePreferenceRow, "user_id" | "key">>;
+type PatternHypothesisInsert = Pick<
+  PatternHypothesisRow,
+  "user_id" | "theme" | "observation" | "uncertainty_statement"
+> &
+  Partial<
+    Omit<PatternHypothesisRow, "user_id" | "theme" | "observation" | "uncertainty_statement">
+  >;
+type PatternEvidenceInsert = Pick<
+  PatternEvidenceRow,
+  "hypothesis_id" | "user_id" | "source_type" | "evidence_summary"
+> &
+  Partial<
+    Omit<PatternEvidenceRow, "hypothesis_id" | "user_id" | "source_type" | "evidence_summary">
+  >;
 type StewardshipEventInsert = Pick<StewardshipEventRow, "user_id" | "event_type"> &
   Partial<Omit<StewardshipEventRow, "id" | "user_id" | "event_type" | "created_at">>;
 
@@ -106,6 +128,9 @@ export type Database = {
       user_privacy_settings: Table<UserPrivacySettingsRow, UserPrivacySettingsInsert>;
       app_roles: Table<AppRoleRow, AppRoleInsert>;
       stewardship_events: Table<StewardshipEventRow, StewardshipEventInsert>;
+      adaptive_preferences: Table<AdaptivePreferenceRow, AdaptivePreferenceInsert>;
+      pattern_hypotheses: Table<PatternHypothesisRow, PatternHypothesisInsert>;
+      pattern_evidence: Table<PatternEvidenceRow, PatternEvidenceInsert>;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -117,6 +142,37 @@ export type Database = {
       stewardship_memory_counts: {
         Args: Record<string, never>;
         Returns: { kind: string; status: string; occurrences: number }[];
+      };
+      record_adaptive_observation: {
+        Args: {
+          p_key: string;
+          p_value?: Record<string, string | number | boolean>;
+          p_explicit?: boolean;
+        };
+        Returns: string;
+      };
+      record_adaptation_correction: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
+      record_pattern_evidence: {
+        Args: {
+          p_theme: string;
+          p_observation: string;
+          p_uncertainty: string;
+          p_source_type: string;
+          p_summary: string;
+          p_cross_domain?: boolean;
+        };
+        Returns: string | null;
+      };
+      adaptation_aggregate_counts: {
+        Args: Record<string, never>;
+        Returns: { record_kind: string; status: string; occurrences: number }[];
+      };
+      feedback_category_counts: {
+        Args: { days?: number };
+        Returns: { feedback_category: string; occurrences: number }[];
       };
     };
     Enums: { [_ in never]: never };

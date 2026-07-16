@@ -8,6 +8,7 @@ import {
 } from "@/app/(app)/actions";
 import { PrototypeImportPreview } from "@/components/import/prototype-import-preview";
 import { ScreenHeader } from "@/components/layout/screen-header";
+import { TrustLinks } from "@/components/layout/trust-links";
 import { DataDeletionSection } from "@/components/settings/data-deletion-section";
 import { PrivacySettingsForm } from "@/components/settings/privacy-settings-form";
 import { GlassSurface } from "@/components/ui/glass-surface";
@@ -55,6 +56,11 @@ export default async function PrivacySettingsPage() {
       <GlassSurface>
         <PrototypeImportPreview />
       </GlassSurface>
+
+      <section aria-label="Policies and support">
+        <h2 className="mb-1 px-3 text-sm font-medium text-ink-soft">Policies &amp; support</h2>
+        <TrustLinks />
+      </section>
     </div>
   );
 }

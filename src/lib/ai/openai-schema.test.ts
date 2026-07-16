@@ -39,6 +39,33 @@ describe("COMPANION_RESPONSE_JSON_SCHEMA parity", () => {
     expect(step.additionalProperties).toBe(false);
     expect(memory.additionalProperties).toBe(false);
     expect(schema.properties.safety.additionalProperties).toBe(false);
+    expect(schema.properties.reflection.anyOf[0].additionalProperties).toBe(false);
+    expect(schema.properties.adaptationNotice.anyOf[0].additionalProperties).toBe(false);
+    expect(schema.properties.insightCandidate.anyOf[0].additionalProperties).toBe(false);
+  });
+
+  it("v0.7 optional objects are required-nullable with fully required nested keys", () => {
+    for (const key of ["reflection", "adaptationNotice", "insightCandidate"] as const) {
+      expect(schema.required).toContain(key);
+      const branches = schema.properties[key].anyOf.map((branch) => branch.type);
+      expect(branches).toContain("null");
+      expect(branches).toContain("object");
+    }
+    expect([...schema.properties.reflection.anyOf[0].required].sort()).toEqual([
+      "alternativePerspectives",
+      "facts",
+      "interpretations",
+      "unknowns",
+    ]);
+    expect([...schema.properties.adaptationNotice.anyOf[0].required].sort()).toEqual([
+      "preferenceKey",
+      "summary",
+    ]);
+    expect([...schema.properties.insightCandidate.anyOf[0].required].sort()).toEqual([
+      "observation",
+      "theme",
+      "uncertaintyStatement",
+    ]);
   });
 
   it("objects that satisfy the JSON schema shape also satisfy Zod (spot checks)", () => {
@@ -76,9 +103,8 @@ describe("COMPANION_RESPONSE_JSON_SCHEMA parity", () => {
         safety: { level: "none", message: null },
         extra: true,
       }).success,
-      // Zod strips unknown keys by default; the JSON schema forbids them —
-      // strictly narrower at the provider boundary is acceptable.
-    ).toBe(true);
+      // Exact parity with additionalProperties:false — unknown keys reject.
+    ).toBe(false);
     expect(
       companionResponseSchema.safeParse({
         supportMode: "diagnose",

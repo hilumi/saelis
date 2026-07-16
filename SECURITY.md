@@ -63,6 +63,30 @@ reproduction steps. You'll get an acknowledgment within a few days.
   only with the user's analytics opt-in. Memory edits re-check prohibited categories and reject
   obvious credential material.
 
+## Adaptation and pattern data (v0.7 — Saelis Core)
+
+- `adaptive_preferences`, `pattern_hypotheses`, and `pattern_evidence` all carry RLS
+  (owner-only). Users can read, correct, pause, reset, and delete everything about themselves.
+- Confidence and evidence counts can only INCREASE through two narrowly scoped SECURITY DEFINER
+  functions (`record_adaptive_observation`, `record_pattern_evidence`) with fixed increments,
+  scoped to `auth.uid()`, with pinned search_path. Ordinary updates are trigger-guarded to status
+  changes and confidence DECREASES — a hostile client cannot inflate what Saelis "believes".
+- Confidence is database-bounded to [0,1]; counts nonnegative; preference keys and pattern themes
+  are check-constraint allowlists; preference values are size-capped jsonb; there is no freeform
+  metadata column anywhere.
+- Evidence summaries are content-free, length-capped descriptions selected by the application —
+  user message text is never copied into adaptation storage (no shadow transcripts).
+- Provider output never persists adaptation or pattern records: candidates pass a deterministic
+  server-side screen (theme allowlist, uncertainty requirement, prohibited-wording ban, safety
+  gate, consent gate, theme opt-outs), and provider-authored adaptation notices are discarded.
+- Deterministic post-validation strips diagnoses, trauma-causation claims, protected-trait
+  inferences, and third-party-certainty sentences from every response, and removes humor where
+  the moment prohibits it.
+- The founder has no row-level access to any adaptation table; the only privileged surface is
+  `adaptation_aggregate_counts()` — counts by status, no content columns selected.
+- Adaptation runs only with BOTH the adaptive-learning setting and companion-memory privacy
+  setting enabled, and never harvests anything from an exchange with a non-`none` safety level.
+
 ## Known gaps (tracked for future phases)
 
 - Content-Security-Policy is not yet strict.

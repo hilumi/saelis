@@ -69,6 +69,25 @@ categories even when a proposal slips through (`PROHIBITED_MEMORY_CATEGORIES`):
 **Faith preference** may be stored only when the user explicitly selects it in companion settings
 — never harvested from conversation.
 
+## Adaptive preferences (v0.7 — a class of their own)
+
+Low-risk communication preferences ("prefers shorter answers", "appreciates direct feedback",
+"no emojis") are NOT memories: they hold no personal facts, only how Saelis should speak. They
+follow their own charter (`docs/03-engineering/adaptive-preferences.md`):
+
+- Learned from **explicit statements only** in this milestone; every observation produces a
+  visible notice.
+- Keys come from a closed allowlist — no sensitive category can exist by construction.
+- Confidence is deterministic, decays without support, and only ever rises through bounded
+  server-side policy — never through provider output.
+- All of them are visible, adjustable, pausable, and erasable in Settings → "How we communicate".
+- **Enduring understanding candidates** (facts, values, relationships, life experiences) remain
+  governed by this charter's proposal-and-approval flow. Nothing is ever silently promoted from
+  adaptation to memory.
+
+Pattern hypotheses similarly store only content-free evidence summaries — never conversation
+text — and are reviewable, rejectable, and expirable (`docs/01-the-light/pattern-awareness.md`).
+
 ## Additional protections
 
 - No memory proposal in or near a crisis exchange (safety level ≠ none).

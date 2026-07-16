@@ -23,7 +23,7 @@ export interface ComposedPrompt {
 }
 
 const OUTPUT_CONTRACT =
-  "Respond ONLY with JSON matching CompanionResponse: { supportMode, message, followUp|null, closingLine|null, suggestedStep{title,description,estimatedMinutes}|null, proposedMemory{category,content,reason}|null, safety{level,message|null} }. No explanation of your reasoning process.";
+  "Respond ONLY with JSON matching CompanionResponse: { supportMode, message, followUp|null, closingLine|null, suggestedStep{title,description,estimatedMinutes}|null, proposedMemory{category,content,reason}|null, safety{level,message|null}, reflection{facts,interpretations,unknowns,alternativePerspectives}|null, adaptationNotice|null (always null — the application sets it), insightCandidate{theme,observation,uncertaintyStatement}|null (tentative, uncertainty-phrased, only when a real cross-conversation pattern seems present) }. No explanation of your reasoning process.";
 
 export function composePrompt(
   context: LightContext,

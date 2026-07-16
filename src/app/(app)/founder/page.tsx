@@ -4,7 +4,9 @@ import { ScreenHeader } from "@/components/layout/screen-header";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { hasFounderRole } from "@/lib/db/queries/roles";
+import { getAdaptationAggregateCounts } from "@/lib/db/queries/adaptation";
 import {
+  getFeedbackCategoryCounts,
   getStewardshipEventCounts,
   getStewardshipMemoryCounts,
 } from "@/lib/db/queries/stewardship";
@@ -31,6 +33,13 @@ const EVENT_LABELS: Record<string, string> = {
   horizon_step_added: "Horizon steps added",
   response_feedback_positive: "Marked helpful",
   response_feedback_negative: "Marked not quite",
+  adaptation_corrected: "Adaptations corrected",
+  adaptation_reset: "Adaptations reset",
+  pattern_insight_surfaced: "Pattern insights surfaced",
+  pattern_insight_accepted: "Pattern insights explored",
+  pattern_insight_rejected: "Pattern insights declined",
+  humor_feedback_negative: "Humor didn't land",
+  challenge_feedback_negative: "Challenge didn't land",
 };
 
 /**
@@ -59,6 +68,27 @@ export default async function FounderPage() {
   } catch {
     aggregatesAvailable = false;
   }
+
+  // "Not quite" category counts (30 days) — categories only, never text.
+  let feedbackCategories: Array<{ feedback_category: string; occurrences: number }> = [];
+  try {
+    feedbackCategories = await getFeedbackCategoryCounts(supabase);
+  } catch {
+    feedbackCategories = [];
+  }
+
+  // Adaptation aggregates are counts by status only — no user-level access to
+  // adaptation records exists anywhere, by database policy.
+  let adaptationCounts: Array<{ record_kind: string; status: string; occurrences: number }> = [];
+  try {
+    adaptationCounts = await getAdaptationAggregateCounts(supabase);
+  } catch {
+    adaptationCounts = [];
+  }
+  const adaptationCount = (kind: string, statuses: string[]) =>
+    adaptationCounts
+      .filter((row) => row.record_kind === kind && statuses.includes(row.status))
+      .reduce((sum, row) => sum + row.occurrences, 0);
 
   const count = (type: string) =>
     eventCounts.find((event) => event.event_type === type)?.occurrences ?? 0;
@@ -122,6 +152,58 @@ export default async function FounderPage() {
           </GlassSurface>
 
           <GlassSurface>
+            <h2 className="mb-2 font-semibold text-ink">
+              &quot;Not quite&quot; categories (30 days)
+            </h2>
+            {feedbackCategories.length === 0 ? (
+              <p className="text-sm text-ink-soft">No category feedback yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-1 text-sm text-ink-soft">
+                {feedbackCategories.map((row) => (
+                  <li key={row.feedback_category} className="flex justify-between">
+                    <span>{row.feedback_category.replace(/-/g, " ")}</span>
+                    <span className="tabular-nums text-ink">{row.occurrences}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-3 text-xs text-ink-muted">
+              Categories only — feedback never stores conversation text, by schema.
+            </p>
+          </GlassSurface>
+
+          <GlassSurface>
+            <h2 className="mb-2 font-semibold text-ink">Adaptation stewardship</h2>
+            <dl className="grid grid-cols-2 gap-2 text-sm">
+              <dt className="text-ink-soft">Active adaptive preferences</dt>
+              <dd className="tabular-nums text-ink">
+                {adaptationCount("adaptive_preference", ["active"])}
+              </dd>
+              <dt className="text-ink-soft">Paused or reset preferences</dt>
+              <dd className="tabular-nums text-ink">
+                {adaptationCount("adaptive_preference", ["paused", "reset"])}
+              </dd>
+              <dt className="text-ink-soft">Pattern hypotheses in review</dt>
+              <dd className="tabular-nums text-ink">
+                {adaptationCount("pattern_hypothesis", ["reviewable"])}
+              </dd>
+              <dt className="text-ink-soft">Pattern hypotheses explored</dt>
+              <dd className="tabular-nums text-ink">
+                {adaptationCount("pattern_hypothesis", ["accepted"])}
+              </dd>
+              <dt className="text-ink-soft">Pattern hypotheses declined</dt>
+              <dd className="tabular-nums text-ink">
+                {adaptationCount("pattern_hypothesis", ["rejected"])}
+              </dd>
+            </dl>
+            <p className="mt-3 text-xs text-ink-muted">
+              Counts by status only. No communication styles, phrases, pattern content, evidence
+              summaries, or per-person drill-down exist on this surface — by design and by database
+              policy.
+            </p>
+          </GlassSurface>
+
+          <GlassSurface>
             <h2 className="mb-2 font-semibold text-ink">Memory stewardship</h2>
             <dl className="grid grid-cols-2 gap-2 text-sm">
               <dt className="text-ink-soft">Active Constellations</dt>
@@ -136,8 +218,8 @@ export default async function FounderPage() {
       <GlassSurface>
         <h2 className="mb-2 font-semibold text-ink">Releases</h2>
         <p className="text-sm text-ink-soft">
-          v0.5 Constellations & Stewardship — see CHANGELOG.md and ROADMAP.md in the repository.
-          Test and build status live in the local quality checks (npm test, npm run build).
+          v0.8 Web Beta Readiness — see CHANGELOG.md and ROADMAP.md in the repository. Test and
+          build status live in the local quality checks (npm test, npm run build).
         </p>
       </GlassSurface>
     </div>

@@ -64,22 +64,60 @@ Key properties, all covered by tests:
 
 ### Foundational documents
 
-| Document                           | Path                                               |
-| ---------------------------------- | -------------------------------------------------- |
-| The Book of Saelis                 | `docs/00-foundations/the-book-of-saelis.md`        |
-| Company Principles (Eight Pillars) | `docs/00-foundations/company-principles.md`        |
-| North Star                         | `docs/00-foundations/north-star.md`                |
-| Constitution of the Light          | `docs/01-the-light/constitution.md`                |
-| Companion Voice Guide              | `docs/01-the-light/companion-voice-guide.md`       |
-| Emotional Architecture             | `docs/01-the-light/emotional-architecture.md`      |
-| Memory Charter                     | `docs/01-the-light/memory-charter.md`              |
-| Experience Map                     | `docs/02-product/experience-map.md`                |
-| Light Engine Architecture          | `docs/03-engineering/light-engine-architecture.md` |
-| Safety and Boundaries              | `docs/03-engineering/safety-and-boundaries.md`     |
+| Document                           | Path                                                 |
+| ---------------------------------- | ---------------------------------------------------- |
+| The Book of Saelis                 | `docs/00-foundations/the-book-of-saelis.md`          |
+| Company Principles (Eight Pillars) | `docs/00-foundations/company-principles.md`          |
+| North Star                         | `docs/00-foundations/north-star.md`                  |
+| Constitution of the Light          | `docs/01-the-light/constitution.md`                  |
+| Companion Voice Guide              | `docs/01-the-light/companion-voice-guide.md`         |
+| Emotional Architecture             | `docs/01-the-light/emotional-architecture.md`        |
+| Memory Charter                     | `docs/01-the-light/memory-charter.md`                |
+| Experience Map                     | `docs/02-product/experience-map.md`                  |
+| Light Engine Architecture          | `docs/03-engineering/light-engine-architecture.md`   |
+| Safety and Boundaries              | `docs/03-engineering/safety-and-boundaries.md`       |
+| Manifesto (v0.7 principles)        | `MANIFESTO.md`                                       |
+| Relational Intelligence            | `docs/01-the-light/relational-intelligence.md`       |
+| Linguistic Mirroring               | `docs/01-the-light/linguistic-mirroring.md`          |
+| Constructive Challenge             | `docs/01-the-light/constructive-challenge.md`        |
+| Pattern Awareness                  | `docs/01-the-light/pattern-awareness.md`             |
+| Saelis Core Architecture           | `docs/03-engineering/saelis-core-architecture.md`    |
+| Adaptive Preferences               | `docs/03-engineering/adaptive-preferences.md`        |
+| Pattern Hypothesis Safety          | `docs/03-engineering/pattern-hypothesis-safety.md`   |
+| Things You May Not Have Noticed    | `docs/02-product/things-you-may-not-have-noticed.md` |
 
 **Phase 2 status:** philosophy formalized, Light Engine built and integrated with the mock
 companion API. Run the engine's tests with `npm test` (see `src/lib/light/*.test.ts` for the
 message matrix).
+
+## Saelis Core (v0.7) — relational intelligence foundation
+
+Saelis Core (`src/lib/core/`) extends the Light Engine into one coherent internal system that
+reads the room before responding. It is pure, synchronous, deterministic, and sits between the
+Light Engine's understanding and the provider — the user still experiences one simple companion,
+never a collection of modes or engines.
+
+- **Read the room.** Emotional temperature, vulnerability, urgency, and the user's actual goal —
+  with explicit intent ("I just need to vent", "be honest with me") always overriding inference.
+- **Response posture.** One primary posture (witness, ground, explore, clarify, challenge, plan,
+  celebrate, play, comfort, reflect, presence) plus optional secondary, controlling cadence,
+  directness, question count, and whether facts and interpretations are separated.
+- **Humor is a privilege, not a default.** Permitted only when settings, safety, vulnerability,
+  the moment, and the relationship all allow it — and stripped deterministically otherwise.
+- **Constructive challenge.** The Light does not agree merely to comfort; deterministic rulings
+  govern when honesty is invited, when to ask permission, and when a harmful action must be named.
+- **Linguistic mirroring of form only.** Energy, rhythm, structure, emoji — never identity, never
+  dialect mimicry, never cultural caricature.
+- **Transparent adaptation.** Allowlisted low-risk preferences with a deterministic confidence
+  model and decay; visible in Settings → "How we communicate"; explicit statements only in v0.7.
+- **Pattern hypotheses.** Tentative, uncertainty-phrased, evidence-backed observations that
+  mature only across multiple moments and days — reviewable at `/insights` ("Things you may not
+  have noticed"), rejectable, and expirable. Provider output never persists anything directly.
+- **Post-validation enforcement.** Diagnoses, trauma-causation claims, protected-trait
+  inferences, third-party certainty, unauthorized humor, and unapproved shared language are
+  removed deterministically after Zod validation (`src/lib/ai/plan-enforcement.ts`).
+
+See `docs/03-engineering/saelis-core-architecture.md` for the full pipeline.
 
 ## The Awakening (Phase 3) — live companion integration
 
@@ -198,12 +236,19 @@ The marketing pages work without credentials. Auth and the app screens require S
 | `NEXT_PUBLIC_SUPABASE_URL`             | browser-safe    | Supabase project URL                                                     |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | browser-safe    | publishable (anon) key; RLS-protected                                    |
 | `SUPABASE_SECRET_KEY`                  | **server only** | privileged operations (account deletion). Never import into client code. |
-| `OPENAI_API_KEY`                       | **server only** | placeholder — unused in Phase 1                                          |
-| `OPENAI_MODEL`                         | server          | placeholder — unused in Phase 1                                          |
-| `COMPANION_PROVIDER`                   | server          | `mock` (default). `openai` throws a not-configured error by design.      |
+| `OPENAI_API_KEY`                       | **server only** | live provider key; required only when `COMPANION_PROVIDER=openai`        |
+| `OPENAI_MODEL`                         | server          | model id for the live provider                                           |
+| `OPENAI_REQUEST_TIMEOUT_MS`            | server          | optional tuning (default 30000)                                          |
+| `OPENAI_MAX_OUTPUT_TOKENS`             | server          | optional tuning (default 1600)                                           |
+| `OPENAI_MAX_RETRIES`                   | server          | optional tuning (default 1)                                              |
+| `OPENAI_STORE_RESPONSES`               | server          | keep `false` — provider-side storage stays off                           |
+| `COMPANION_PROVIDER`                   | server          | `mock` (default, no external calls) or `openai`                          |
 | `APP_URL`                              | server          | canonical URL for metadata and redirects                                 |
 
-Never commit `.env.local`. Never log secret values.
+Never commit `.env.local`. Never log secret values. Server-only secrets live exclusively in
+`server-only` modules (`src/lib/ai/openai-client.ts`, `src/lib/supabase/admin.ts`) and are never
+prefixed `NEXT_PUBLIC_*`. The full launch runbook is
+`docs/03-engineering/deployment-checklist.md`.
 
 ## Supabase setup
 
@@ -214,7 +259,7 @@ Never commit `.env.local`. Never log secret values.
    npx supabase db push        # applies supabase/migrations in order
    ```
    Or paste each file from `supabase/migrations/` into the SQL editor, in order:
-   `00001_initial_schema.sql`, `00002_functions_and_triggers.sql`, `00003_row_level_security.sql`.
+   `00001_initial_schema.sql` … `00006_web_beta_readiness.sql` (all six, in filename order).
 3. In Auth settings, add redirect URLs (see Deploying below).
 4. New auth users automatically get a profile, companion profile, and privacy settings via trigger.
 

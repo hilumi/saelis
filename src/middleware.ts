@@ -13,6 +13,10 @@ const PROTECTED_PREFIXES = [
   "/horizon",
   "/echoes",
   "/settings",
+  "/onboarding",
+  "/insights",
+  "/constellations",
+  "/founder",
 ];
 
 /** Signed-in users are sent back into the app from these routes. */

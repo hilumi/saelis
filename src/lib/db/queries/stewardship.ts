@@ -48,3 +48,12 @@ export async function getStewardshipMemoryCounts(
   if (error) throw new Error("Aggregates unavailable.");
   return data ?? [];
 }
+
+/** Founder-only "Not quite" category counts (30 days). Counts only. */
+export async function getFeedbackCategoryCounts(
+  supabase: Client,
+): Promise<Array<{ feedback_category: string; occurrences: number }>> {
+  const { data, error } = await supabase.rpc("feedback_category_counts", { days: 30 });
+  if (error) throw new Error("Aggregates unavailable.");
+  return data ?? [];
+}
