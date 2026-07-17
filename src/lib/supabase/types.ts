@@ -24,6 +24,30 @@ import type {
   StewardshipEventRow,
   UserPrivacySettingsRow,
 } from "@/types/database";
+import type {
+  ExerciseLibraryRow,
+  MealTemplateRow,
+  PostpartumCheckInRow,
+  PostpartumProfileRow,
+  WellnessDailyCheckInRow,
+  WellnessDailyMetricsRow,
+  WellnessDailyPlanRow,
+  WellnessEnrollmentRow,
+  WellnessExerciseLogRow,
+  WellnessGoalRow,
+  WellnessMealPlanRow,
+  WellnessMilestoneRow,
+  WellnessNotificationPreferencesRow,
+  WellnessNutritionLogRow,
+  WellnessOnboardingDraftRow,
+  WellnessPathwayRow,
+  WellnessProgramRow,
+  WellnessProgramWeekRow,
+  WellnessWorkoutLogRow,
+  WomenWellnessProfileRow,
+  WorkoutTemplateExerciseRow,
+  WorkoutTemplateRow,
+} from "@/types/wellness";
 
 type Table<Row, Insert> = {
   Row: Row;
@@ -31,6 +55,9 @@ type Table<Row, Insert> = {
   Update: Partial<Insert>;
   Relationships: [];
 };
+
+/** Insert helper: required keys + everything else optional. */
+type InsertOf<Row, Required extends keyof Row> = Pick<Row, Required> & Partial<Omit<Row, Required>>;
 
 type ProfileInsert = Pick<ProfileRow, "id"> &
   Partial<Pick<ProfileRow, "preferred_name" | "timezone" | "onboarded_at">>;
@@ -131,6 +158,115 @@ export type Database = {
       adaptive_preferences: Table<AdaptivePreferenceRow, AdaptivePreferenceInsert>;
       pattern_hypotheses: Table<PatternHypothesisRow, PatternHypothesisInsert>;
       pattern_evidence: Table<PatternEvidenceRow, PatternEvidenceInsert>;
+      // --- Saelis Her (00007). Neutral naming for shared tables; postpartum
+      // --- tables are Restore-only. See CLAUDE.md.
+      wellness_pathways: Table<WellnessPathwayRow, InsertOf<WellnessPathwayRow, "key">>;
+      wellness_enrollments: Table<
+        WellnessEnrollmentRow,
+        InsertOf<WellnessEnrollmentRow, "user_id" | "pathway_key">
+      >;
+      women_wellness_profiles: Table<
+        WomenWellnessProfileRow,
+        InsertOf<WomenWellnessProfileRow, "user_id">
+      >;
+      postpartum_profiles: Table<
+        PostpartumProfileRow,
+        InsertOf<PostpartumProfileRow, "user_id" | "enrollment_id" | "postpartum_stage">
+      >;
+      wellness_goals: Table<WellnessGoalRow, InsertOf<WellnessGoalRow, "user_id" | "goal_type">>;
+      wellness_daily_check_ins: Table<
+        WellnessDailyCheckInRow,
+        InsertOf<WellnessDailyCheckInRow, "user_id" | "check_in_date">
+      >;
+      postpartum_check_ins: Table<
+        PostpartumCheckInRow,
+        InsertOf<PostpartumCheckInRow, "user_id" | "enrollment_id" | "check_in_date">
+      >;
+      wellness_programs: Table<
+        WellnessProgramRow,
+        InsertOf<
+          WellnessProgramRow,
+          | "user_id"
+          | "start_date"
+          | "end_date"
+          | "total_weeks"
+          | "primary_goal"
+          | "weekly_training_days"
+          | "nutrition_strategy"
+          | "safety_tier"
+        >
+      >;
+      wellness_program_weeks: Table<
+        WellnessProgramWeekRow,
+        InsertOf<
+          WellnessProgramWeekRow,
+          "program_id" | "week_number" | "phase_number" | "phase_name" | "weekly_focus"
+        >
+      >;
+      wellness_daily_plans: Table<
+        WellnessDailyPlanRow,
+        InsertOf<WellnessDailyPlanRow, "user_id" | "plan_date">
+      >;
+      wellness_workout_logs: Table<
+        WellnessWorkoutLogRow,
+        InsertOf<
+          WellnessWorkoutLogRow,
+          "user_id" | "workout_date" | "workout_type" | "title" | "source" | "completion_status"
+        >
+      >;
+      wellness_exercise_logs: Table<
+        WellnessExerciseLogRow,
+        InsertOf<WellnessExerciseLogRow, "workout_log_id" | "exercise_name" | "sequence_number">
+      >;
+      wellness_nutrition_logs: Table<
+        WellnessNutritionLogRow,
+        InsertOf<WellnessNutritionLogRow, "user_id" | "log_date" | "meal_type" | "description">
+      >;
+      wellness_daily_metrics: Table<
+        WellnessDailyMetricsRow,
+        InsertOf<WellnessDailyMetricsRow, "user_id" | "metric_date">
+      >;
+      wellness_meal_plans: Table<
+        WellnessMealPlanRow,
+        InsertOf<WellnessMealPlanRow, "user_id" | "week_start_date" | "plan_data">
+      >;
+      wellness_milestones: Table<
+        WellnessMilestoneRow,
+        InsertOf<WellnessMilestoneRow, "user_id" | "milestone_key" | "milestone_type">
+      >;
+      exercise_library: Table<
+        ExerciseLibraryRow,
+        InsertOf<ExerciseLibraryRow, "slug" | "name" | "category" | "difficulty" | "instructions">
+      >;
+      workout_templates: Table<
+        WorkoutTemplateRow,
+        InsertOf<
+          WorkoutTemplateRow,
+          | "slug"
+          | "name"
+          | "description"
+          | "location"
+          | "approximate_minutes"
+          | "difficulty"
+          | "intensity_guidance"
+        >
+      >;
+      workout_template_exercises: Table<
+        WorkoutTemplateExerciseRow,
+        InsertOf<WorkoutTemplateExerciseRow, "template_id" | "exercise_id" | "sequence_number">
+      >;
+      meal_templates: Table<
+        MealTemplateRow,
+        InsertOf<MealTemplateRow, "slug" | "name" | "meal_type" | "description">
+      >;
+      wellness_onboarding_drafts: Table<
+        WellnessOnboardingDraftRow,
+        InsertOf<WellnessOnboardingDraftRow, "user_id">
+      >;
+      wellness_notification_preferences: Table<
+        WellnessNotificationPreferencesRow,
+        InsertOf<WellnessNotificationPreferencesRow, "user_id">
+      >;
     };
     Views: { [_ in never]: never };
     Functions: {

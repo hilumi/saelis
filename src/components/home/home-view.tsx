@@ -269,6 +269,29 @@ export function HomeView({ data: serverData, preview }: { data: HomeData; previe
         )}
       </section>
 
+      <section aria-labelledby="her-glimpse" className="w-full text-left">
+        <h2
+          id="her-glimpse"
+          className="mb-2 text-sm font-medium uppercase tracking-wide text-ink-muted"
+        >
+          Saelis Her
+        </h2>
+        <div className="glass-surface flex flex-wrap items-center justify-between gap-3 p-4">
+          <div>
+            <p className="text-ink">Wellness for every version of you.</p>
+            <p className="text-sm text-ink-soft">
+              Adaptive pathways for movement, nourishment, and recovery — on your terms.
+            </p>
+          </div>
+          <Link
+            href="/wellness/her"
+            className="inline-flex min-h-11 items-center rounded-full bg-cloud-lilac px-4 text-sm font-medium text-ink hover:bg-sky-lilac"
+          >
+            Open Saelis Her
+          </Link>
+        </div>
+      </section>
+
       <footer className="flex flex-col items-center gap-2 pb-4">
         {closingLine ? (
           <p className="text-sm italic text-ink-soft" role="status">

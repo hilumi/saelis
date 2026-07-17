@@ -325,6 +325,16 @@ export async function POST(request: Request) {
     });
     plan = enrichLightPlan(plan, coreAssessment);
 
+    // Saelis Her context (additive; null for non-enrolled users; never throws).
+    // Deterministic wellness engines remain authoritative — the appended
+    // boundaries forbid the model from overriding safety holds.
+    {
+      const { loadHerCompanionContext, withHerContext } =
+        await import("@/lib/wellness/companion-context-service");
+      const herContext = await loadHerCompanionContext(supabase, user.id);
+      if (herContext) plan = withHerContext(plan, herContext);
+    }
+
     // Abort plumbing: browser disconnect or explicit stop cancels generation.
     const abortController = new AbortController();
     request.signal.addEventListener("abort", () => abortController.abort());

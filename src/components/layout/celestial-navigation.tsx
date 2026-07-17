@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/stay-here", label: "Stay Here" },
   { href: "/stillness", label: "Stillness" },
   { href: "/echoes", label: "Echoes" },
+  { href: "/wellness/her", label: "Her" },
   { href: "/settings/companion", label: "Settings" },
 ] as const;
 

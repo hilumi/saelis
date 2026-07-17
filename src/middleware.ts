@@ -17,6 +17,7 @@ const PROTECTED_PREFIXES = [
   "/insights",
   "/constellations",
   "/founder",
+  "/wellness",
 ];
 
 /** Signed-in users are sent back into the app from these routes. */

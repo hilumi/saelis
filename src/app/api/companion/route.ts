@@ -176,6 +176,14 @@ export async function POST(request: Request) {
       }),
     );
 
+    // Saelis Her context (additive; null for non-enrolled users; never throws).
+    {
+      const { loadHerCompanionContext, withHerContext } =
+        await import("@/lib/wellness/companion-context-service");
+      const herContext = await loadHerCompanionContext(supabase, user.id);
+      if (herContext) plan = withHerContext(plan, herContext);
+    }
+
     let response: CompanionResponse;
 
     if (plan.understanding.safetyLevel === "urgent") {

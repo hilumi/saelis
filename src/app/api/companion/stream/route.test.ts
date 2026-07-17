@@ -11,6 +11,13 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({ auth: { getUser: mockGetUser }, from: mockFrom })),
 }));
 
+// Saelis Her context is loaded additively in the route; these tests cover the
+// companion in isolation, so the loader is mocked to "not enrolled".
+vi.mock("@/lib/wellness/companion-context-service", () => ({
+  loadHerCompanionContext: vi.fn(async () => null),
+  withHerContext: vi.fn((plan: unknown) => plan),
+}));
+
 vi.mock("@/lib/db/queries/profile", () => ({
   getCompanionProfile: vi.fn(async () => null),
   getPrivacySettings: vi.fn(async () => null),
