@@ -23,6 +23,7 @@
     "mobile:start": "npm run start --workspace @saelis/mobile",
     "mobile:ios": "npm run ios --workspace @saelis/mobile",
     "mobile:android": "npm run android --workspace @saelis/mobile",
+    "mobile:test": "npm run test --workspace @saelis/mobile",
     "mobile:typecheck": "npm run typecheck --workspace @saelis/mobile",
     "mobile:lint": "npm run lint --workspace @saelis/mobile",
     "mobile:format": "npm run format --workspace @saelis/mobile",

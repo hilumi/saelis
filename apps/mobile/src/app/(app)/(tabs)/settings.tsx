@@ -10,7 +10,7 @@ import { spacing } from "@/theme";
 
 /** Settings: placeholders for account and preferences, plus sign out. */
 export default function SettingsScreen() {
-  const { signOut } = useSession();
+  const { signOut, session } = useSession();
   const version = Constants.expoConfig?.version ?? "0.1.0";
 
   return (
@@ -27,7 +27,10 @@ export default function SettingsScreen() {
         <GlassSurface style={styles.card}>
           <SaelisText variant="section">Account</SaelisText>
           <SaelisText variant="body" color="secondary">
-            Account details appear here once sign-in is connected.
+            {session?.email ?? "Signed in"}
+          </SaelisText>
+          <SaelisText variant="meta" color="muted">
+            The same account and data as saelis on the web.
           </SaelisText>
         </GlassSurface>
 
