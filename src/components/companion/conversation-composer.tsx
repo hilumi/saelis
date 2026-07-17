@@ -79,7 +79,7 @@ export function ConversationComposer({ onSend, disabled = false }: ConversationC
         event.preventDefault();
         void handleSend();
       }}
-      className="glass-surface sticky bottom-[env(safe-area-inset-bottom)] flex items-end gap-3 p-3"
+      className="glass-surface composer-surface sticky bottom-[env(safe-area-inset-bottom)] flex items-end gap-3 p-3"
     >
       <label htmlFor="composer-message" className="sr-only">
         Your message

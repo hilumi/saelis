@@ -52,6 +52,27 @@ export async function loadHerCompanionContext(
     ).length;
     const latestMilestone = milestones[0]?.celebration_message ?? null;
 
+    // Fire-and-forget analytics (Phase 6): a context request happened and
+    // whether a hold shaped it — never message text, never symptom detail.
+    // recordAuthenticatedAnalyticsEvent never throws; void keeps the chat
+    // path's latency and behavior unchanged.
+    void import("@/lib/analytics/record")
+      .then(({ recordAuthenticatedAnalyticsEvent }) => {
+        void recordAuthenticatedAnalyticsEvent(supabase, userId, {
+          eventName: "companion_wellness_context_requested",
+          source: "companion",
+          metadata: { under_safety_hold: safetyHoldActive },
+        });
+        if (safetyHoldActive) {
+          void recordAuthenticatedAnalyticsEvent(supabase, userId, {
+            eventName: "companion_safety_boundary_applied",
+            source: "companion",
+            metadata: { under_safety_hold: true },
+          });
+        }
+      })
+      .catch(() => {});
+
     return {
       activePathwayKeys: pathways,
       primaryGoal: (goals.find((goal) => goal.priority === 1)?.goal_type ??

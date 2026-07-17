@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { recordAuthenticatedAnalyticsEvent } from "@/lib/analytics/record";
+import { recordEnrollmentEvent } from "@/lib/analytics/instrument";
 import { requireUser } from "@/lib/auth/require-user";
 import { upsertPostpartumProfile } from "@/lib/db/queries/postpartum/profile";
 import { upsertDailyCheckIn } from "@/lib/db/queries/wellness/check-ins";
@@ -63,6 +65,8 @@ export async function enrollInPathway(input: unknown): Promise<ActionResult> {
     if (!parsed.success) return { ok: false, error: "That pathway choice didn't look right." };
     const supabase = await createClient();
     await createEnrollment(supabase, user.id, parsed.data);
+    // Analytics after the successful write; never blocks or breaks the save.
+    await recordEnrollmentEvent(supabase, user.id, parsed.data.pathwayKey, "enrolled");
     revalidateHer();
     return { ok: true };
   } catch (error) {
@@ -85,6 +89,18 @@ async function setEnrollmentState(
     if (operation === "resume") await resumeEnrollment(supabase, user.id, parsed.data.enrollmentId);
     if (operation === "archive")
       await archiveEnrollment(supabase, user.id, parsed.data.enrollmentId);
+    // Analytics after the successful state change (own-row lookup for the key).
+    const { data: enrollmentRow } = await supabase
+      .from("wellness_enrollments")
+      .select("pathway_key")
+      .eq("id", parsed.data.enrollmentId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (enrollmentRow) {
+      const analyticsAction =
+        operation === "pause" ? "paused" : operation === "resume" ? "resumed" : "archived";
+      await recordEnrollmentEvent(supabase, user.id, enrollmentRow.pathway_key, analyticsAction);
+    }
     revalidateHer();
     return { ok: true };
   } catch (error) {
@@ -207,6 +223,18 @@ export async function saveOnboardingProgress(input: unknown): Promise<ActionResu
     }
     const supabase = await createClient();
     await saveOnboardingDraft(supabase, user.id, parsed.data.currentStep, parsed.data.data);
+    // Analytics after the successful save — step keys only, never answers.
+    if (parsed.data.currentStep === "welcome") {
+      await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+        eventName: "saelis_her_onboarding_started",
+        dedupeKey: `onboarding_started:${user.id}`,
+      });
+    }
+    await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+      eventName: "saelis_her_onboarding_step_completed",
+      metadata: { step: parsed.data.currentStep },
+      dedupeKey: `onboarding_step:${user.id}:${parsed.data.currentStep}`,
+    });
     return { ok: true };
   } catch (error) {
     return failure(error);
@@ -222,6 +250,13 @@ export async function finishOnboarding(input: unknown): Promise<ActionResult> {
     }
     const supabase = await createClient();
     await completeOnboarding(supabase, user.id, parsed.data);
+    // Analytics after the successful completion transaction (counts only).
+    await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+      eventName: "saelis_her_onboarding_completed",
+      pathwayKeys: parsed.data.pathways ?? [],
+      metadata: { pathway_count: parsed.data.pathways?.length ?? 1 },
+      dedupeKey: `onboarding_completed:${user.id}`,
+    });
     revalidateHer();
     return { ok: true };
   } catch (error) {
@@ -293,6 +328,14 @@ export async function deleteAllHerData(input: unknown): Promise<ActionResult> {
     const supabase = await createClient();
     const { deleteAllWellnessData } = await import("@/lib/db/queries/wellness/deletion");
     await deleteAllWellnessData(supabase, user.id);
+    // Detach the user's identity from all analytics events (aggregate counts
+    // survive de-identified; SECURITY DEFINER, scoped to auth.uid()). Best
+    // effort — deletion of wellness data never fails on analytics.
+    try {
+      await supabase.rpc("anonymize_my_analytics_events");
+    } catch {
+      // Full account deletion also nulls these via FK (on delete set null).
+    }
     revalidateHer();
     return { ok: true };
   } catch (error) {

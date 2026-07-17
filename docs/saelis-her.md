@@ -285,6 +285,20 @@ analytics, evening-reflection history views, and internationalized crisis resour
 future work. The safety engine stays a conservative floor over self-reported data; nutrition
 numbers remain estimates and say so.
 
+## Admin analytics and operational observability (Phase 6)
+
+An internal, aggregated product-operations dashboard for authorized administrators lives under
+`/admin` (analytics: overview, onboarding, engagement, pathways, notifications, safety;
+operations: job health). Everything is server-authorized (`requireAdminAccess`, 404 otherwise),
+deny-by-default at the database (RLS with zero policies on `analytics_events`,
+`analytics_daily_rollups`, `analytics_job_runs`), opt-in per user
+(`allow_product_analytics`), coarse-category-only by strict Zod allowlists, and cohort-protected
+(minimum 5, centralized). Instrumentation records at authoritative server points (stored plans,
+persisted workout logs, deduplicated milestones, enrollment changes, the deterministic safety
+engine's tier — broad reason categories only). A bearer-authorized cron route
+(`/api/cron/analytics-rollup`) performs idempotent daily rollups; nothing runs automatically.
+Full details, role assignment, retention proposal, and limitations: `docs/admin-analytics.md`.
+
 ## How to add a future pathway
 
 1. Add the key to `PATHWAY_KEYS` and a full definition in

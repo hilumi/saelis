@@ -19,3 +19,16 @@ export async function hasFounderRole(supabase: Client, userId: string): Promise<
   if (error) return false;
   return data !== null;
 }
+
+export type AppRole = "founder" | "admin" | "support" | "product_analytics" | "support_admin";
+
+/**
+ * All roles held by a user (server-side lookup; RLS restricts reads to the
+ * user's OWN roles, which is exactly what authorization checks need). Errors
+ * degrade to "no roles" — deny by default.
+ */
+export async function listAppRoles(supabase: Client, userId: string): Promise<AppRole[]> {
+  const { data, error } = await supabase.from("app_roles").select("role").eq("user_id", userId);
+  if (error) return [];
+  return (data ?? []).map((row) => row.role as AppRole);
+}

@@ -148,7 +148,7 @@ export function HomeView({ data: serverData, preview }: { data: HomeData; previe
   const memoryTotal = data.memories.constellationCount + data.memories.northStarCount;
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col items-center gap-8 pt-6 text-center">
+    <div className="rise-in mx-auto flex max-w-xl flex-col items-center gap-8 pt-6 text-center">
       {preview ? (
         <p className="rounded-full bg-cloud-lilac px-4 py-1 text-xs text-ink-soft">
           Development preview: {preview} (fictional content, never persisted)
@@ -158,7 +158,7 @@ export function HomeView({ data: serverData, preview }: { data: HomeData; previe
       <TheLight state={lightState} skyTone={sky.lightTone} size={130} />
 
       <header>
-        <h1 className="text-3xl font-semibold text-ink">{greetingTitle}</h1>
+        <h1 className="type-display text-ink">{greetingTitle}</h1>
         <p className="mt-1 text-ink-soft">{greetingLine}</p>
         {returnContext && returnContext !== "today" ? (
           <p className="mt-2 text-sm text-ink-muted">{RETURN_LINES[returnContext]}</p>
@@ -172,7 +172,7 @@ export function HomeView({ data: serverData, preview }: { data: HomeData; previe
             href={action.href}
             onFocus={() => setLightState("listening")}
             onBlur={() => setLightState("resting")}
-            className="glass-surface flex min-h-11 flex-col items-start gap-0.5 px-5 py-4 text-left hover:bg-cloud-lilac/50"
+            className="glass-surface interactive-depth flex min-h-11 flex-col items-start gap-0.5 px-5 py-4 text-left hover:bg-cloud-lilac/50"
           >
             <span className="font-semibold text-ink">{action.label}</span>
             <span className="text-sm text-ink-soft">{action.description}</span>

@@ -107,6 +107,16 @@ restrictions, and recommendations must **never** reach users who have not activa
 - Scope every user-owned query by the authenticated user; RLS is the final authority.
 - **Never log sensitive wellness or symptom data**, message content, memory content, or secrets.
   Telemetry is content-free by schema (`stewardship_events`) and analytics is opt-in.
+- **Admin analytics (Phase 6, `docs/admin-analytics.md`)**: `analytics_*` tables are
+  deny-by-default (RLS on, zero policies) — writes only via the server-only service
+  `src/lib/analytics/record.ts` (strict Zod allowlists; user-linked events require
+  `allow_product_analytics`), reads only via admin services after
+  `requireAdminAccess()` (`src/lib/auth/admin-access.ts`). Every `/admin` page and
+  route re-checks roles server-side (404 otherwise). Analytics events carry coarse
+  categories and counters only — never symptoms, free text, endpoints, or secrets;
+  dimensional breakdowns apply the minimum cohort size (default 5, centralized).
+  Roles (`admin`, `product_analytics`, `support_admin`) are assigned manually in the
+  database only — the application never grants them.
 - Postpartum data must never be exposed between users or to non-Restore code paths.
 - Account deletion must cascade through all user-owned tables (wellness included).
 - **Do not modify `.env.local` values.** `.env.example` documents placeholders only.

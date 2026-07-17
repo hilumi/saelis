@@ -38,7 +38,12 @@ export function LivingSky() {
     const root = document.documentElement;
     root.style.setProperty("--sky-glass", palette.glassTint);
     root.style.setProperty("--sky-text-overlay", palette.textOverlay);
-  }, [palette.glassTint, palette.textOverlay]);
+    root.dataset.skyPhase = state.phase;
+
+    return () => {
+      delete root.dataset.skyPhase;
+    };
+  }, [palette.glassTint, palette.textOverlay, state.phase]);
 
   const style = {
     "--sky-top": palette.skyTop,

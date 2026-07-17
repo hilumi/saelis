@@ -55,7 +55,7 @@ export function OnboardingFlow({ action }: OnboardingFlowProps) {
   const screens = [
     // 1 — what Saelis is
     <section key="what" aria-label="What Saelis is" className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-ink">A quiet place of your own.</h1>
+      <h1 className="type-title text-ink">A quiet place of your own.</h1>
       <p className="text-ink-soft">
         Saelis is a companion for the moments in between — for venting, thinking out loud,
         celebrating, untangling a decision, or just not being alone with something. It listens
@@ -72,7 +72,7 @@ export function OnboardingFlow({ action }: OnboardingFlowProps) {
 
     // 2 — honest AI disclosure
     <section key="ai" aria-label="Saelis is AI" className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-ink">Saelis is AI — and honest about it.</h1>
+      <h1 className="type-title text-ink">Saelis is AI — and honest about it.</h1>
       <p className="text-ink-soft">
         Saelis is an AI companion, not a person. It can misunderstand you, miss context, or simply
         get things wrong. When it&apos;s unsure, it will say so — and you should feel free to
@@ -101,7 +101,7 @@ export function OnboardingFlow({ action }: OnboardingFlowProps) {
 
     // 3 — initial voice choices
     <section key="voice" aria-label="How Saelis speaks" className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-ink">How should Saelis speak with you?</h1>
+      <h1 className="type-title text-ink">How should Saelis speak with you?</h1>
       <p className="text-ink-soft">A starting point — you can change this any time in Settings.</p>
 
       <fieldset className="flex flex-col gap-2">
@@ -150,7 +150,7 @@ export function OnboardingFlow({ action }: OnboardingFlowProps) {
 
     // 4 — begin
     <section key="begin" aria-label="Ready" className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-ink">Come as you are.</h1>
+      <h1 className="type-title text-ink">Come as you are.</h1>
       <p className="text-ink-soft">
         There&apos;s no wrong way to start — say anything, or nothing in particular. Nothing is
         remembered without your yes, and everything Saelis adapts stays visible in Settings.
@@ -167,10 +167,13 @@ export function OnboardingFlow({ action }: OnboardingFlowProps) {
 
   return (
     <div className="glass-surface flex flex-col gap-4 p-6 sm:p-8">
-      <p className="text-xs text-ink-muted" aria-label="Progress">
+      <p className="type-meta text-ink-muted" aria-label="Progress">
         {step + 1} of {screens.length}
       </p>
-      {screens[step]}
+      {/* Keyed on step so each screen settles in; reduced motion stills it. */}
+      <div key={step} className="rise-in flex flex-col gap-4">
+        {screens[step]}
+      </div>
     </div>
   );
 }

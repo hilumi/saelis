@@ -123,7 +123,7 @@ export type UserPrivacySettingsRow = {
 
 export type AppRoleRow = {
   user_id: string;
-  role: "founder" | "admin" | "support";
+  role: "founder" | "admin" | "support" | "product_analytics" | "support_admin";
   created_at: string;
 };
 
@@ -183,5 +183,48 @@ export type StewardshipEventRow = {
   memory_kind: string | null;
   feedback_category: string | null;
   app_version: string | null;
+  created_at: string;
+};
+
+// --- Phase 6 admin analytics (00009). DENY-BY-DEFAULT tables: RLS enabled
+// --- with zero policies; server-only service-role access. Metadata is a
+// --- strictly allowlisted, size-capped JSONB written after Zod validation.
+
+export type AnalyticsEventRow = {
+  id: string;
+  event_name: string;
+  event_version: number;
+  occurred_at: string;
+  user_id: string | null;
+  anonymous_session_id: string | null;
+  pathway_keys: string[];
+  source: "web" | "server" | "cron" | "notification_worker" | "companion" | "migration" | "test";
+  route: string | null;
+  metadata: Record<string, string | number | boolean>;
+  created_at: string;
+};
+
+export type AnalyticsDailyRollupRow = {
+  rollup_date: string;
+  metric_key: string;
+  dimension_key: string;
+  dimension_value: string;
+  metric_value: number;
+  unique_users: number | null;
+  metadata: Record<string, string | number | boolean>;
+  generated_at: string;
+};
+
+export type AnalyticsJobRunRow = {
+  id: string;
+  job_key: string;
+  started_at: string;
+  completed_at: string | null;
+  status: "running" | "completed" | "partial" | "failed";
+  processed_count: number | null;
+  success_count: number | null;
+  failure_count: number | null;
+  error_category: string | null;
+  metadata: Record<string, string | number | boolean>;
   created_at: string;
 };

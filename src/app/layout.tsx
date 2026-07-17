@@ -1,3 +1,5 @@
+import localFont from "next/font/local";
+
 import { LivingSky } from "@/components/sky/living-sky";
 import { SkyProvider } from "@/components/sky/sky-provider";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
@@ -6,6 +8,23 @@ import "./globals.css";
 
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+
+/**
+ * Manrope — the single Saelis application face. Self-hosted variable font
+ * via next/font/local (committed to the repo, OFL-licensed): no blocking
+ * @import, no external request, deterministic builds, automatic preload
+ * and size-adjusted fallback to prevent layout shift. Weights below 400
+ * are never used — thin text is excluded for readability.
+ */
+const manrope = localFont({
+  src: [
+    { path: "../fonts/manrope-latin-wght-normal.woff2", style: "normal", weight: "200 800" },
+    { path: "../fonts/manrope-latin-ext-wght-normal.woff2", style: "normal", weight: "200 800" },
+  ],
+  display: "swap",
+  variable: "--font-manrope",
+  fallback: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
@@ -42,7 +61,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={manrope.variable}>
       <body className="min-h-dvh antialiased">
         {/* The Living Sky: one continuous atmosphere behind every route.
             Children stay server components; only the sky boundary is client. */}

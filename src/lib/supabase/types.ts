@@ -11,6 +11,9 @@
  */
 import type {
   AdaptivePreferenceRow,
+  AnalyticsDailyRollupRow,
+  AnalyticsEventRow,
+  AnalyticsJobRunRow,
   AppRoleRow,
   ArrivalRow,
   PatternEvidenceRow,
@@ -267,6 +270,20 @@ export type Database = {
         WellnessNotificationPreferencesRow,
         InsertOf<WellnessNotificationPreferencesRow, "user_id">
       >;
+      // --- Phase 6 admin analytics (00009). Deny-by-default RLS (no
+      // --- policies); server-only service-role access. See CLAUDE.md.
+      analytics_events: Table<
+        AnalyticsEventRow,
+        InsertOf<AnalyticsEventRow, "event_name" | "source">
+      >;
+      analytics_daily_rollups: Table<
+        AnalyticsDailyRollupRow,
+        InsertOf<AnalyticsDailyRollupRow, "rollup_date" | "metric_key" | "metric_value">
+      >;
+      analytics_job_runs: Table<
+        AnalyticsJobRunRow,
+        InsertOf<AnalyticsJobRunRow, "job_key" | "started_at" | "status">
+      >;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -309,6 +326,10 @@ export type Database = {
       feedback_category_counts: {
         Args: { days?: number };
         Returns: { feedback_category: string; occurrences: number }[];
+      };
+      anonymize_my_analytics_events: {
+        Args: Record<string, never>;
+        Returns: undefined;
       };
     };
     Enums: { [_ in never]: never };

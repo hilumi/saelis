@@ -30,19 +30,19 @@ export function ConversationTurn({
 }: ConversationTurnProps) {
   const isUser = role === "user";
   return (
-    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+    <div className={cn("conversation-turn-enter flex", isUser ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[85%] rounded-3xl px-5 py-4",
-          isUser ? "bg-cloud-lilac text-ink" : "glass-surface text-ink",
+          "max-w-[85%] px-5 py-4",
+          isUser ? "conversation-bubble-user text-ink" : "conversation-bubble-assistant text-ink",
         )}
       >
         {!isUser && supportMode ? (
-          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-muted">
+          <p className="type-meta mb-1 uppercase text-ink-muted">
             {supportModeLabels[supportMode]}
           </p>
         ) : null}
-        <p className="whitespace-pre-wrap leading-relaxed">{content}</p>
+        <p className="conversation-prose whitespace-pre-wrap">{content}</p>
         {!isUser && closingLine ? <ClosingLine text={closingLine} /> : null}
       </div>
     </div>

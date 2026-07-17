@@ -42,7 +42,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         className,
       )}
     >
-      <h2 className="mb-3 text-lg font-semibold text-ink">{title}</h2>
+      <h2 className="type-section mb-3 text-ink">{title}</h2>
       {children}
     </dialog>
   );

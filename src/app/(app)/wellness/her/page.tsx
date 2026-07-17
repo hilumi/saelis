@@ -109,6 +109,12 @@ export default async function HerPage() {
   try {
     const outcome = await generateDailyPlanForUser(supabase, user.id, today);
     stored = outcome.plan;
+    // Analytics only when a plan was ACTUALLY generated (engine non-null) —
+    // returning the stored plan records nothing. Guarded; never blocks render.
+    if (outcome.engine) {
+      const { recordDailyPlanOutcome } = await import("@/lib/analytics/instrument");
+      await recordDailyPlanOutcome(supabase, user.id, today, outcome);
+    }
     plan = {
       presentation: presentStoredPlan({
         planDate: stored.row.plan_date,

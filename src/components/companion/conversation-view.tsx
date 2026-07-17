@@ -321,7 +321,7 @@ export function ConversationView({ approveMemoryAction, feedbackAction }: Conver
         <TheLight state={lightState} skyTone={sky.lightTone} size={72} />
       </div>
 
-      <div aria-live="polite" className="flex flex-col gap-4">
+      <div aria-live="polite" className="flex flex-col gap-5">
         {turns.length === 0 ? (
           <p className="text-center text-ink-soft">
             There&apos;s no wrong way to start. Saelis listens first.

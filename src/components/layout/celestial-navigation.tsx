@@ -35,8 +35,8 @@ export function CelestialNavigation() {
                 className={cn(
                   "inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors",
                   active
-                    ? "bg-cloud-lilac text-ink underline decoration-accent-lilac decoration-2 underline-offset-4"
-                    : "text-ink-soft hover:bg-cloud-lilac/60 hover:text-ink",
+                    ? "nav-pill--active text-ink underline decoration-accent-lilac decoration-2 underline-offset-4"
+                    : "text-ink-soft hover:bg-cloud-lilac/60 hover:text-ink active:bg-cloud-lilac",
                 )}
               >
                 {item.label}

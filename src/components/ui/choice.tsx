@@ -21,8 +21,10 @@ export function Choice({ label, description, selected, onSelect, className }: Ch
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        "glass-surface flex min-h-11 w-full items-center gap-3 px-4 py-3 text-left transition-colors",
-        selected ? "border-2 border-accent-lilac" : "hover:bg-cloud-lilac/50",
+        "glass-surface interactive-depth flex min-h-11 w-full items-center gap-3 px-4 py-3 text-left",
+        selected
+          ? "border-2 border-accent-lilac bg-cloud-lilac/40 shadow-[0_10px_26px_rgb(45_54_80/0.16)]"
+          : "hover:bg-cloud-lilac/50 active:bg-cloud-lilac/60",
         className,
       )}
     >

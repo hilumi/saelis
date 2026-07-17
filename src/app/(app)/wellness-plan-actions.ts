@@ -3,6 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import {
+  recordDailyPlanOutcome,
+  recordMilestoneEvents,
+  recordWorkoutLogEvents,
+} from "@/lib/analytics/instrument";
+import { recordAuthenticatedAnalyticsEvent } from "@/lib/analytics/record";
 import { requireUser } from "@/lib/auth/require-user";
 import { upsertPostpartumCheckIn } from "@/lib/db/queries/postpartum/check-ins";
 import { upsertDailyCheckIn } from "@/lib/db/queries/wellness/check-ins";
@@ -93,7 +99,18 @@ export async function saveDailyCheckInAction(input: unknown): Promise<ActionResu
     const supabase = await createClient();
     await upsertDailyCheckIn(supabase, user.id, parsed.data);
     // A new check-in invalidates today's stored plan inputs → refresh.
-    await generateDailyPlanForUser(supabase, user.id, parsed.data.checkInDate, { refresh: true });
+    const outcome = await generateDailyPlanForUser(supabase, user.id, parsed.data.checkInDate, {
+      refresh: true,
+    });
+    // Analytics after the successful saves (coarse categories only).
+    await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+      eventName: "daily_check_in_completed",
+      metadata: parsed.data.readiness ? { readiness: parsed.data.readiness } : {},
+      dedupeKey: `check_in:${user.id}:${parsed.data.checkInDate}`,
+    });
+    await recordDailyPlanOutcome(supabase, user.id, parsed.data.checkInDate, outcome, {
+      refresh: true,
+    });
     revalidatePath("/wellness/her");
     return { ok: true };
   } catch (error) {
@@ -108,7 +125,14 @@ export async function saveRestoreCheckInAction(input: unknown): Promise<ActionRe
     if (!parsed.success) return { ok: false, error: "That check-in didn't look right." };
     const supabase = await createClient();
     await upsertPostpartumCheckIn(supabase, user.id, parsed.data);
-    await generateDailyPlanForUser(supabase, user.id, parsed.data.checkInDate, { refresh: true });
+    const outcome = await generateDailyPlanForUser(supabase, user.id, parsed.data.checkInDate, {
+      refresh: true,
+    });
+    // Plan/safety outcome only — postpartum check-in content NEVER reaches
+    // analytics (the safety event carries a broad category and tier only).
+    await recordDailyPlanOutcome(supabase, user.id, parsed.data.checkInDate, outcome, {
+      refresh: true,
+    });
     revalidatePath("/wellness/her");
     return { ok: true };
   } catch (error) {
@@ -146,13 +170,24 @@ export async function generateTodayPlan(input: unknown): Promise<ActionResult> {
     const parsed = planRequestSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: CALM_ERROR };
     const supabase = await createClient();
-    await generateDailyPlanForUser(supabase, user.id, parsed.data.date, {
-      refresh: parsed.data.refresh || parsed.data.quickSelection === "replace_today",
-      quickSelection:
-        parsed.data.quickSelection === "replace_today" ? null : parsed.data.quickSelection,
+    const replaced = parsed.data.quickSelection === "replace_today";
+    const refresh = parsed.data.refresh || replaced;
+    const outcome = await generateDailyPlanForUser(supabase, user.id, parsed.data.date, {
+      refresh,
+      quickSelection: replaced ? null : parsed.data.quickSelection,
       availableMinutesOverride: parsed.data.availableMinutes ?? null,
       locationOverride: parsed.data.location ?? null,
     });
+    await recordDailyPlanOutcome(supabase, user.id, parsed.data.date, outcome, {
+      refresh,
+      replaced,
+    });
+    if (replaced && outcome.engine) {
+      await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+        eventName: "workout_replaced",
+        metadata: {},
+      });
+    }
     revalidatePath("/wellness/her");
     return { ok: true };
   } catch (error) {
@@ -167,11 +202,15 @@ export async function adaptPlanForTime(input: unknown): Promise<ActionResult> {
     const parsed = planRequestSchema.safeParse(input);
     if (!parsed.success) return { ok: false, error: CALM_ERROR };
     const supabase = await createClient();
-    await generateDailyPlanForUser(supabase, user.id, parsed.data.date, {
+    const outcome = await generateDailyPlanForUser(supabase, user.id, parsed.data.date, {
       refresh: true,
       availableMinutesOverride: parsed.data.availableMinutes ?? null,
       quickSelection: parsed.data.quickSelection ?? null,
       locationOverride: parsed.data.location ?? null,
+    });
+    await recordDailyPlanOutcome(supabase, user.id, parsed.data.date, outcome, {
+      refresh: true,
+      replaced: parsed.data.quickSelection === "replace_today",
     });
     revalidatePath("/wellness/her");
     return { ok: true };
@@ -205,6 +244,9 @@ export async function completeWorkout(input: unknown): Promise<ActionResult> {
     if (parsed.data.exercises.length > 0) {
       await addExerciseLogs(supabase, user.id, log.id, parsed.data.exercises);
     }
+    // Analytics after the log is persisted (categories/buckets only —
+    // titles, notes, and symptom detail never leave the wellness tables).
+    await recordWorkoutLogEvents(supabase, user.id, parsed.data.workout);
     await checkMilestones(user.id);
     revalidatePath("/wellness/her");
     return { ok: true };
@@ -222,6 +264,11 @@ export async function logMeal(input: unknown): Promise<ActionResult> {
     if (!parsed.success) return { ok: false, error: "That entry didn't look right." };
     const supabase = await createClient();
     await createNutritionLog(supabase, user.id, parsed.data);
+    // Meal type and provenance only — the description never reaches analytics.
+    await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+      eventName: "meal_logged",
+      metadata: { meal_type: parsed.data.mealType, logged_via: parsed.data.loggedVia },
+    });
     return { ok: true };
   } catch (error) {
     return failure(error);
@@ -249,6 +296,10 @@ export async function quickAddProtein(input: unknown): Promise<ActionResult> {
       ironRich: false,
       estimationNotice: true,
     });
+    await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+      eventName: "protein_quick_added",
+      metadata: { logged_via: "quick_add" },
+    });
     return { ok: true };
   } catch (error) {
     return failure(error);
@@ -269,6 +320,10 @@ export async function logHydration(input: unknown): Promise<ActionResult> {
     await upsertDailyMetrics(supabase, user.id, {
       metricDate: parsed.data.metricDate,
       waterOunces: parsed.data.waterOunces,
+    });
+    await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+      eventName: "hydration_quick_added",
+      metadata: {},
     });
     return { ok: true };
   } catch (error) {
@@ -306,6 +361,13 @@ export async function generateWeeklyMealPlan(input: unknown): Promise<ActionResu
     await generateMealPlanForUser(supabase, user.id, parsed.data.weekStartDate, {
       refresh: parsed.data.refresh,
     });
+    await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+      eventName: parsed.data.refresh ? "meal_plan_regenerated" : "meal_plan_generated",
+      metadata: { refresh: parsed.data.refresh },
+      dedupeKey: parsed.data.refresh
+        ? undefined
+        : `meal_plan:${user.id}:${parsed.data.weekStartDate}`,
+    });
     revalidatePath("/wellness/her");
     return { ok: true };
   } catch (error) {
@@ -332,6 +394,10 @@ export async function replaceMeal(input: unknown): Promise<ActionResult> {
       parsed.data.date,
       parsed.data.mealType,
     );
+    await recordAuthenticatedAnalyticsEvent(supabase, user.id, {
+      eventName: "meal_replaced",
+      metadata: { meal_type: parsed.data.mealType },
+    });
     revalidatePath("/wellness/her");
     return { ok: true };
   } catch (error) {
@@ -401,8 +467,14 @@ async function checkMilestones(userId: string): Promise<void> {
       returnedAfterBreak: false,
       existingKeys: new Set(existing.map((milestone) => milestone.milestone_key)),
     };
-    for (const milestone of detectMilestones(context)) {
+    const detected = detectMilestones(context);
+    for (const milestone of detected) {
       await recordMilestone(supabase, userId, milestone);
+    }
+    // Analytics AFTER deduplicated creation (engine key-set + DB unique
+    // constraint) — milestone types only, never celebration content.
+    if (detected.length > 0) {
+      await recordMilestoneEvents(supabase, userId, detected);
     }
   } catch {
     // Milestones must never break a save.

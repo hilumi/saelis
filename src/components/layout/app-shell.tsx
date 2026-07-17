@@ -14,12 +14,12 @@ export interface AppShellProps {
 /** Shared shell for the signed-in app: skip link, header, nav, main landmark. */
 export function AppShell({ children, signOutAction }: AppShellProps) {
   return (
-    <div className="min-h-dvh">
+    <div className="app-depth-shell min-h-dvh">
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
       {/* Atmosphere is provided globally by the Living Sky (root layout). */}
-      <header className="mx-auto flex w-full max-w-4xl flex-wrap items-center gap-4 px-4 py-4">
+      <header className="app-depth-header mx-auto flex w-full max-w-4xl flex-wrap items-center gap-4 px-4 py-4">
         <Link href="/home" className="inline-flex items-center gap-2 rounded-full">
           <OpenHorizon size={32} label="Saelis home" />
           <SaelisWordmark />
@@ -38,7 +38,10 @@ export function AppShell({ children, signOutAction }: AppShellProps) {
           </form>
         ) : null}
       </header>
-      <main id="main-content" className="mx-auto w-full max-w-4xl px-4 pb-16 pt-4">
+      <main
+        id="main-content"
+        className="app-depth-content mx-auto w-full max-w-4xl px-4 pb-16 pt-4"
+      >
         {children}
       </main>
     </div>
