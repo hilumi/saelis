@@ -5,3 +5,6 @@ coverage
 package-lock.json
 public
 supabase/migrations
+# Workspaces format with their own configs (see apps/mobile).
+apps
+packages

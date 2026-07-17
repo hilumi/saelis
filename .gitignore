@@ -1,5 +1,13 @@
 # dependencies
 /node_modules
+apps/*/node_modules
+packages/*/node_modules
+
+# expo
+apps/mobile/.expo/
+apps/mobile/expo-env.d.ts
+apps/mobile/ios/
+apps/mobile/android/
 /.pnp
 .pnp.*
 

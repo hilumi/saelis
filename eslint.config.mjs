@@ -11,7 +11,16 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   {
-    ignores: ["node_modules/**", ".next/**", "out/**", "coverage/**", "next-env.d.ts"],
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "coverage/**",
+      "next-env.d.ts",
+      // Workspaces lint with their own configs (see apps/mobile/eslint.config.js).
+      "apps/**",
+      "packages/**",
+    ],
   },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 ];

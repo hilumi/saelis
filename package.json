@@ -6,6 +6,10 @@
   "engines": {
     "node": ">=22 <23"
   },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -15,7 +19,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "mobile:start": "npm run start --workspace @saelis/mobile",
+    "mobile:ios": "npm run ios --workspace @saelis/mobile",
+    "mobile:android": "npm run android --workspace @saelis/mobile",
+    "mobile:typecheck": "npm run typecheck --workspace @saelis/mobile",
+    "mobile:lint": "npm run lint --workspace @saelis/mobile",
+    "mobile:format": "npm run format --workspace @saelis/mobile",
+    "mobile:format:check": "npm run format:check --workspace @saelis/mobile"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
