@@ -1,5 +1,8 @@
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
+
+import { hasSeenOnboarding } from "@/lib/onboarding";
 
 import { GlassSurface } from "@/components/glass-surface";
 import { SaelisButton } from "@/components/saelis-button";
@@ -19,6 +22,17 @@ function greetingForHour(hour: number): string {
 export default function HomeScreen() {
   const router = useRouter();
   const greeting = greetingForHour(new Date().getHours());
+
+  // First launch: show the brief, skippable introduction once.
+  useEffect(() => {
+    let mounted = true;
+    void hasSeenOnboarding().then((seen) => {
+      if (mounted && !seen) router.push("/(app)/onboarding");
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
 
   return (
     <Screen edges={{ bottom: false }}>

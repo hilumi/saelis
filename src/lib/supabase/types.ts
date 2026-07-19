@@ -16,6 +16,7 @@ import type {
   AnalyticsJobRunRow,
   AppRoleRow,
   ArrivalRow,
+  CompanionNotificationPreferencesRow,
   PatternEvidenceRow,
   PatternHypothesisRow,
   CompanionMemoryRow,
@@ -23,7 +24,9 @@ import type {
   ConversationRow,
   ConversationTurnRow,
   HorizonStepRow,
+  NotificationDeliveryRow,
   ProfileRow,
+  PushTokenRow,
   StewardshipEventRow,
   UserPrivacySettingsRow,
 } from "@/types/database";
@@ -283,6 +286,17 @@ export type Database = {
       analytics_job_runs: Table<
         AnalyticsJobRunRow,
         InsertOf<AnalyticsJobRunRow, "job_key" | "started_at" | "status">
+      >;
+      // --- Sprint 4 companion notifications (00010). notification_deliveries
+      // --- is deny-by-default (server-only); the other two are own-row RLS.
+      push_tokens: Table<PushTokenRow, InsertOf<PushTokenRow, "user_id" | "token">>;
+      companion_notification_preferences: Table<
+        CompanionNotificationPreferencesRow,
+        InsertOf<CompanionNotificationPreferencesRow, "user_id">
+      >;
+      notification_deliveries: Table<
+        NotificationDeliveryRow,
+        InsertOf<NotificationDeliveryRow, "user_id" | "category" | "idempotency_key">
       >;
     };
     Views: { [_ in never]: never };

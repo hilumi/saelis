@@ -16,6 +16,11 @@ export const companionRequestSchema = z.object({
   conversationId: z.string().uuid().nullable().optional().default(null),
   supportHint: z.enum(SUPPORT_MODES).nullable().optional().default(null),
   includeFaithReflection: z.boolean().optional().default(false),
+  /**
+   * Temporary conversation mode: the server creates no NEW long-term
+   * companion memories from this exchange (no proposals, no adaptation).
+   */
+  temporary: z.boolean().optional().default(false),
 });
 
 export type CompanionApiRequest = z.output<typeof companionRequestSchema>;

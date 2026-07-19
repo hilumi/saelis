@@ -25,3 +25,28 @@ export {
   type CompanionStreamApiRequest,
 } from "./companion/schemas";
 export type { ActionResult, ApiFailure, ApiResult, ApiSuccess } from "./api/result";
+export { apiErrorBodySchema, parseApiError } from "./api/errors";
+export type { ApiErrorBody, ParsedApiError } from "./api/errors";
+export {
+  STREAM_EVENT_NAMES,
+  parseStreamEvent,
+  streamCompleteDataSchema,
+  streamDeltaDataSchema,
+  streamErrorDataSchema,
+  streamResponseSchema,
+  streamStartDataSchema,
+} from "./companion/stream";
+export type {
+  CompanionStreamEvent,
+  StreamCompleteData,
+  StreamDeltaData,
+  StreamErrorData,
+  StreamEventName,
+  StreamResponse,
+  StreamStartData,
+} from "./companion/stream";
+export type {
+  ConversationStatus,
+  ConversationSummary,
+  ConversationTurn,
+} from "./conversation/types";

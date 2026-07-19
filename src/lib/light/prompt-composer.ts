@@ -1,4 +1,8 @@
 import { buildConstitutionInstruction } from "@/lib/light/constitution";
+import {
+  buildResponseContextInstruction,
+  selectResponseContext,
+} from "@/lib/light/response-context";
 
 import type {
   LightContext,
@@ -47,8 +51,18 @@ export function composePrompt(
     OUTPUT_CONTRACT,
   ].join("\n");
 
+  // Deterministic contextual emphasis (never shown to the user; one voice).
+  const responseContext = selectResponseContext({
+    purpose: understanding.purpose,
+    emotionalTone: understanding.emotionalTone,
+    safetyLevel: understanding.safetyLevel,
+    actionReadiness: understanding.actionReadiness,
+    wellnessFocus: context.latestArrival?.supportNeed != null,
+  });
+
   const lines: string[] = [
     `Mode: ${understanding.supportMode}. Purpose: ${understanding.purpose}. Tone read: ${understanding.emotionalTone}. Action readiness: ${understanding.actionReadiness}.`,
+    buildResponseContextInstruction(responseContext),
     `Goal: ${reflection.responseGoal}.`,
     reflection.shouldOfferAction
       ? "You may offer one small step (respect planning style)."

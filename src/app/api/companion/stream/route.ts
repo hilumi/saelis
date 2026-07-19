@@ -32,7 +32,7 @@ import { beginGeneration, endGeneration } from "@/lib/idempotency";
 import { createLightPlan, LightContextError } from "@/lib/light";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
-import { createClient } from "@/lib/supabase/server";
+import { resolveRequestAuth } from "@/lib/supabase/request-auth";
 import { hashUserRef, logCompanionEvent } from "@/lib/telemetry";
 import { companionStreamRequestSchema } from "@/lib/validation/companion";
 
@@ -186,10 +186,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Web (cookies) and mobile (verified bearer token) resolve identically;
+  // both yield an RLS client scoped to the authenticated user.
+  const { supabase, user } = await resolveRequestAuth(request);
   if (!user) {
     return json({ error: "Please sign in to talk with Saelis." }, 401);
   }
@@ -262,8 +261,10 @@ export async function POST(request: Request) {
     const saveHistory = privacy?.save_conversation_history ?? true;
     const preferences = toCompanionPreferences(companionProfile);
     // Adaptation aligns with existing consent: the explicit adaptive-learning
-    // setting AND companion memory must both be on.
-    const adaptationEnabled = preferences.adaptiveLearningEnabled && allowMemory;
+    // setting AND companion memory must both be on — and never during a
+    // temporary conversation (no new long-term learning of any kind).
+    const adaptationEnabled =
+      preferences.adaptiveLearningEnabled && allowMemory && !input.temporary;
 
     const [memories, recentTurns, recentArrivals, adaptivePreferences, patternHypotheses] =
       await Promise.all([
@@ -448,6 +449,12 @@ export async function POST(request: Request) {
               safetyLevel: response.safety.level,
               retryCount: metadata?.retryCount,
             });
+          }
+
+          // Temporary conversation mode: strip any memory proposal — nothing
+          // from this exchange may become a long-term companion memory.
+          if (input.temporary && response.proposedMemory) {
+            response = { ...response, proposedMemory: null };
           }
 
           // Saelis Core adaptation policy: explicit observations, humor

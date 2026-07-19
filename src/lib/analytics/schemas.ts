@@ -220,6 +220,16 @@ const METADATA_SCHEMAS: Readonly<Record<AnalyticsEventName, MetadataSchema>> = {
   notification_suppressed: notificationMetadata,
   notification_failed: notificationMetadata,
   push_subscription_invalidated: emptyMetadata,
+  // Companion experience (Sprint 4) — content-free coarse facts only.
+  notification_permission_prompted: emptyMetadata,
+  notification_permission_granted: emptyMetadata,
+  notification_permission_denied: emptyMetadata,
+  notification_preference_updated: emptyMetadata,
+  conversation_starter_used: z.object({ ...commonMetadata, starter_key: shortKey }).strict(),
+  memory_enabled: emptyMetadata,
+  memory_disabled: emptyMetadata,
+  memory_deleted: emptyMetadata,
+  temporary_mode_enabled: emptyMetadata,
   // Companion
   companion_opened_from_wellness: companionMetadata,
   companion_wellness_context_requested: companionMetadata,

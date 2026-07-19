@@ -13,6 +13,7 @@
 
 export const ANALYTICS_SOURCES = [
   "web",
+  "mobile",
   "server",
   "cron",
   "notification_worker",
@@ -22,8 +23,8 @@ export const ANALYTICS_SOURCES = [
 ] as const;
 export type AnalyticsSource = (typeof ANALYTICS_SOURCES)[number];
 
-/** Sources a browser-originated request may claim. Everything else is server-authoritative. */
-export const CLIENT_SOURCES: readonly AnalyticsSource[] = ["web"];
+/** Sources a client-originated request may claim. Everything else is server-authoritative. */
+export const CLIENT_SOURCES: readonly AnalyticsSource[] = ["web", "mobile"];
 
 export const ONBOARDING_EVENTS = [
   "saelis_her_onboarding_started",
@@ -117,6 +118,23 @@ export const SAFETY_EVENTS = [
   "safety_tier_urgent_support",
 ] as const;
 
+/**
+ * Sprint 4 — companion experience (mobile). Client-originated (consent-gated
+ * by allow_product_analytics) except where recorded by server routes. All
+ * content-free: coarse facts only, never memory text or conversation content.
+ */
+export const COMPANION_EXPERIENCE_EVENTS = [
+  "notification_permission_prompted",
+  "notification_permission_granted",
+  "notification_permission_denied",
+  "notification_preference_updated",
+  "conversation_starter_used",
+  "memory_enabled",
+  "memory_disabled",
+  "memory_deleted",
+  "temporary_mode_enabled",
+] as const;
+
 export const SYSTEM_EVENTS = [
   "api_operation_failed",
   "plan_generation_failed",
@@ -139,6 +157,7 @@ export const ANALYTICS_EVENT_NAMES = [
   ...PROGRESS_EVENTS,
   ...NOTIFICATION_EVENTS,
   ...COMPANION_EVENTS,
+  ...COMPANION_EXPERIENCE_EVENTS,
   ...SAFETY_EVENTS,
   ...SYSTEM_EVENTS,
 ] as const;

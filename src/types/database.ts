@@ -198,7 +198,15 @@ export type AnalyticsEventRow = {
   user_id: string | null;
   anonymous_session_id: string | null;
   pathway_keys: string[];
-  source: "web" | "server" | "cron" | "notification_worker" | "companion" | "migration" | "test";
+  source:
+    | "web"
+    | "mobile"
+    | "server"
+    | "cron"
+    | "notification_worker"
+    | "companion"
+    | "migration"
+    | "test";
   route: string | null;
   metadata: Record<string, string | number | boolean>;
   created_at: string;
@@ -227,4 +235,49 @@ export type AnalyticsJobRunRow = {
   error_category: string | null;
   metadata: Record<string, string | number | boolean>;
   created_at: string;
+};
+
+// --- Sprint 4: companion push notifications (00010) -------------------------
+
+export type PushTokenRow = {
+  id: string;
+  user_id: string;
+  token: string;
+  platform: "ios" | "android" | "unknown";
+  revoked_at: string | null;
+  last_registered_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CompanionNotificationPreferencesRow = {
+  user_id: string;
+  enabled: boolean;
+  gentle_check_ins: boolean;
+  wellness_reminders: boolean;
+  evening_reflections: boolean;
+  user_reminders: boolean;
+  preferred_time_minutes: number;
+  timezone: string;
+  quiet_hours_start_minutes: number;
+  quiet_hours_end_minutes: number;
+  preview_mode: "private" | "detailed";
+  proactive_frequency: "daily" | "few_per_week" | "weekly";
+  created_at: string;
+  updated_at: string;
+};
+
+export type NotificationDeliveryRow = {
+  id: string;
+  user_id: string;
+  category:
+    "gentle_check_in" | "wellness_reminder" | "evening_reflection" | "user_reminder" | "test";
+  idempotency_key: string;
+  queued_at: string;
+  sent_at: string | null;
+  failed_at: string | null;
+  provider_status: string | null;
+  token_expired: boolean;
+  created_at: string;
+  updated_at: string;
 };

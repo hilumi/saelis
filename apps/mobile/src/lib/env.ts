@@ -22,6 +22,8 @@ const publicEnvSchema = z.object({
     .string()
     .url("EXPO_PUBLIC_SAELIS_API_URL must be a valid URL (see apps/mobile/.env.example).")
     .optional(),
+  /** EAS project id (public identifier) — required for Expo push tokens. */
+  EXPO_PUBLIC_EAS_PROJECT_ID: z.string().min(1).optional(),
 });
 
 export type PublicEnv = z.output<typeof publicEnvSchema>;
@@ -38,6 +40,7 @@ const parsed = publicEnvSchema.safeParse({
     process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   ),
   EXPO_PUBLIC_SAELIS_API_URL: emptyToUndefined(process.env.EXPO_PUBLIC_SAELIS_API_URL),
+  EXPO_PUBLIC_EAS_PROJECT_ID: emptyToUndefined(process.env.EXPO_PUBLIC_EAS_PROJECT_ID),
 });
 
 if (!parsed.success) {

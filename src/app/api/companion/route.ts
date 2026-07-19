@@ -19,7 +19,7 @@ import { getCompanionProfile, getPrivacySettings } from "@/lib/db/queries/profil
 import { createLightPlan, LightContextError } from "@/lib/light";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { hasSupabaseEnv } from "@/lib/supabase/config";
-import { createClient } from "@/lib/supabase/server";
+import { resolveRequestAuth } from "@/lib/supabase/request-auth";
 import { companionRequestSchema } from "@/lib/validation/companion";
 
 import type { LightContext } from "@/lib/light";
@@ -55,10 +55,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Web (cookies) and mobile (verified bearer token) resolve identically;
+    // both yield an RLS client scoped to the authenticated user.
+    const { supabase, user } = await resolveRequestAuth(request);
 
     if (!user) {
       return NextResponse.json({ error: "Please sign in to talk with Saelis." }, { status: 401 });
